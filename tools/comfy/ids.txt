@@ -1,0 +1,1 @@
+obs_0,obs_1,obs_2,obs_3,obs_4,obs_5,obs_6,obs_7,obs_8,obs_9,trap_plate,trap_spikes,trap_vent,pool_slag,pool_acid

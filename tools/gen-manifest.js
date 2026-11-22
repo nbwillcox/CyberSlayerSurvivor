@@ -10,7 +10,7 @@ const ctx = { window: {}, console }; ctx.window = ctx; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/config.js'), 'utf8').replace('var CS = window.CS =', 'CS ='), ctx);
 const CS = ctx.CS;
 const draw = { gunner: 32, engineer: 32, priest: 32, skeleton: 24, ghost: 24, hound: 32, lich: 28, golem: 36, banshee: 24, drone: 24, coin: 16, scrap: 16, health: 16, magnet: 16, chest: 42, shot_slug: 16, shot_plasma: 8, shot_orb: 16, shot_saw: 16, shot_bolt: 8 };
-const keys = Object.keys(draw); for (let i = 0; i < 10; i++) keys.push('tile_' + i); keys.push('title_bg'); ['fireball', 'flame', 'holyflame', 'lightning', 'ring', 'circle', 'burst', 'swirl', 'slash', 'orb', 'beam', 'cloud', 'spark'].forEach(k => keys.push('fx_' + k));
+const keys = Object.keys(draw); for (let i = 0; i < 10; i++) { keys.push('obs_' + i); draw['obs_' + i] = 64; } ['trap_plate', 'trap_spikes', 'trap_vent', 'pool_slag', 'pool_acid'].forEach(k => { keys.push(k); draw[k] = 44; }); for (let i = 0; i < 10; i++) keys.push('tile_' + i); keys.push('title_bg'); ['fireball', 'flame', 'holyflame', 'lightning', 'ring', 'circle', 'burst', 'swirl', 'slash', 'orb', 'beam', 'cloud', 'spark'].forEach(k => keys.push('fx_' + k));
 ['gunner', 'engineer', 'priest'].forEach(c => ['vanguard', 'sniper', 'aegis', 'detonator', 'giant'].forEach(k => { keys.push(`mn_${k}_${c}`); draw[`mn_${k}_${c}`] = k === 'giant' ? 42 : 20; }));
 CS.MIDBOSSES.forEach((m, i) => { keys.push('mb_' + i); draw['mb_' + i] = 64; });
 CS.STAGES.forEach((s, i) => { keys.push('boss_' + i); draw['boss_' + i] = i === 9 ? 120 : 96; });

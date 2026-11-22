@@ -24,9 +24,9 @@ TILE = ("Seamless top-down game floor texture, {s}, dark muted colours, subtle l
         "style, no characters, no objects in the middle, tileable pattern.")
 
 S = {  # key -> subject
-    'gunner': 'a cyber-mercenary in a tattered tactical trench coat with a glowing cyan visor, chrome cybernetic arm, holding a smoking heavy revolver pistol',
-    'engineer': 'a female engineer in a bulky exosuit rig with welding goggles on her forehead, a glowing green plasma backpack and a utility belt with tools',
-    'priest': 'a neo-gothic cyber priest in long violet cyber-robes with neon-gold scripture plates, a floating holographic gold halo, holding a bionic staff',
+    'gunner': 'a battle-hardened cyber-mercenary hero in a long tattered tactical trench coat with armor plates, a glowing cyan visor helmet, a chrome cybernetic arm with exposed pistons, ammo bandolier, holding a huge smoking chrome revolver, rich detailed shading, rim lighting',
+    'engineer': 'a heroic female engineer in a bulky detailed exosuit rig with welding goggles on her forehead, a big glowing green plasma reactor backpack with cables, utility belt with tools and a wrench, orange and steel armor panels, rich detailed shading, rim lighting',
+    'priest': 'a majestic neo-gothic cyber priest in long flowing violet and black cyber-robes with ornate neon-gold scripture plates, a floating holographic golden halo, a bionic cyber arm, holding a tall glowing bionic staff, rich detailed shading, rim lighting',
     'skeleton': 'a cybernetic skeleton with a rusted chrome ribcage, glowing red optical eye sockets and a cyan plasma shiv',
     'ghost': 'a translucent holographic cyan skull fused to a hovering quad-rotor drone chassis',
     'hound': 'a four-legged necro-cyborg hound, skeletal frame with hydraulic pistons and glowing red eyes, side view facing right',
@@ -132,6 +132,23 @@ M = {  # minions, drone, loot
     'magnet': 'a red and silver horseshoe magnet power-up with electric sparks',
     'chest': 'an ornate golden cyber-relic treasure chest with glowing cyan locks, three-quarter view',
 }
+O = {  # level props, traps and pools (top-down game objects)
+    'obs_0': 'a cracked gothic stone tombstone pillar with glowing purple runes',
+    'obs_1': 'a stack of rusty industrial metal crates with hazard stripes and a small steam pipe',
+    'obs_2': 'a tall floating glass server tower with glowing cyan data lines',
+    'obs_3': 'a pile of giant bones and a ribcage with pink flesh tendrils',
+    'obs_4': 'a drifting chunk of wrecked starship hull with sparking wires',
+    'obs_5': 'a cracked stone angel statue with a glowing golden halo on a plinth',
+    'obs_6': 'a dead twisted tree stump overgrown with glowing toxic green moss and rusted metal',
+    'obs_7': 'a jagged cluster of glowing blue ice crystals',
+    'obs_8': 'a humming void reactor pylon with swirling crimson plasma inside a glass tube',
+    'obs_9': 'a golden imperial obelisk with crimson inlay and glowing eyes',
+    'trap_plate': 'a metal floor trap plate with small holes, seen from above, flat',
+    'trap_spikes': 'a floor spike trap with sharp metal spikes fully extended, seen from above',
+    'trap_vent': 'a metal floor grate vent with a glowing orange heat glow, seen from above, flat',
+    'pool_slag': 'a top-down oval pool of molten lava with bright glowing cracks and a dark crust edge, flat',
+    'pool_acid': 'a top-down oval pool of bubbling toxic green acid with a rusty metal rim, flat',
+}
 FXT = ("High quality game VFX texture asset: {s}. Glowing, vibrant, bright, centered in the frame, on a pure solid black background, "
        "additive blending ready, no text, no border, no ground, no characters.")
 F = {
@@ -188,6 +205,8 @@ def jobs():
             c = CC.get(k.split('_')[-1], 'green and teal'); yield k, SPRITE.format(s=s) + ' ' + BR.format(c=c), 768, 768
         else:
             yield k, SPRITE.format(s=s), 768, 768
+    for k, s in O.items():
+        yield k, SPRITE.format(s=s) + ' No ground line, no ground shadow, no platform.', 768, 768
     for k, s in F.items():
         yield k, FXT.format(s=s), 512, 512
     for k, s in I.items():

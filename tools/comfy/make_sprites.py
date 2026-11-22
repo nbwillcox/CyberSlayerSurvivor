@@ -19,10 +19,12 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 RAW = os.path.join(ROOT, 'assets', 'raw_art')
 OUT = os.path.join(ROOT, 'assets', 'sprites')
 CH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'art_choices.json')
-DRAW = {'gunner': 54, 'engineer': 54, 'priest': 54, 'skeleton': 36, 'ghost': 36, 'hound': 46, 'lich': 46, 'golem': 58, 'banshee': 40,
+DRAW = {'gunner': 66, 'engineer': 66, 'priest': 66, 'skeleton': 36, 'ghost': 36, 'hound': 46, 'lich': 46, 'golem': 58, 'banshee': 40,
         'mb_0': 96, 'mb_1': 96, 'mb_2': 96, 'mb_3': 96, 'boss_0': 128, 'boss_1': 128, 'boss_2': 128, 'boss_3': 128, 'boss_4': 128,
         'boss_5': 128, 'boss_6': 128, 'boss_7': 128, 'boss_8': 128, 'boss_9': 168,
         'drone': 40, 'coin': 20, 'scrap': 20, 'health': 22, 'magnet': 22, 'chest': 46}
+for _i in range(10): DRAW['obs_%d' % _i] = 64
+DRAW.update({'trap_plate': 44, 'trap_spikes': 44, 'trap_vent': 44, 'pool_slag': 110, 'pool_acid': 110})
 for _c in ('gunner', 'engineer', 'priest'):
     for _k, _s in (('vanguard', 42), ('sniper', 42), ('aegis', 40), ('detonator', 34), ('fusion', 56)):
         DRAW['mn_%s_%s' % (_k, _c)] = _s   # max dimension in px, drawn 1:1 in game
