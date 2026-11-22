@@ -43,6 +43,10 @@ assets/manifest.json  tools/gen-manifest.js
 
 Debug URL flags: `?go=1&stage=3&cls=priest&time=60&god=1&boost=10&gold=5000` (start straight in a run, shorten the stage, invulnerable, all items at the given level).
 
+## Versioning
+
+The build number shows at the lower right of the title screen (`CS.VER` in `js/config.js`). It starts at 0.0.1; bump the last number by **10** for a small update and **100** for a large one (0.0.1 -> 0.0.11 -> 0.0.21 ... 0.0.121).
+
 ## License
 
 **Free for non-commercial use** under [CC BY-NC 4.0](LICENSE). Any use, fork or redistribution must **link back to https://nictools.dev or https://github.com/nbwillcox/CyberSlayerSurvivor**. Commercial use is not permitted.
