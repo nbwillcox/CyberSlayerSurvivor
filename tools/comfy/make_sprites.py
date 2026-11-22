@@ -21,7 +21,11 @@ OUT = os.path.join(ROOT, 'assets', 'sprites')
 CH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'art_choices.json')
 DRAW = {'gunner': 54, 'engineer': 54, 'priest': 54, 'skeleton': 36, 'ghost': 36, 'hound': 46, 'lich': 46, 'golem': 58, 'banshee': 40,
         'mb_0': 96, 'mb_1': 96, 'mb_2': 96, 'mb_3': 96, 'boss_0': 128, 'boss_1': 128, 'boss_2': 128, 'boss_3': 128, 'boss_4': 128,
-        'boss_5': 128, 'boss_6': 128, 'boss_7': 128, 'boss_8': 128, 'boss_9': 168}   # max dimension in px, drawn 1:1 in game
+        'boss_5': 128, 'boss_6': 128, 'boss_7': 128, 'boss_8': 128, 'boss_9': 168,
+        'drone': 40, 'coin': 20, 'scrap': 20, 'health': 22, 'magnet': 22, 'chest': 46}
+for _c in ('gunner', 'engineer', 'priest'):
+    for _k, _s in (('vanguard', 42), ('sniper', 42), ('aegis', 40), ('detonator', 34), ('fusion', 56)):
+        DRAW['mn_%s_%s' % (_k, _c)] = _s   # max dimension in px, drawn 1:1 in game
 import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen_art import I as _ICONS, F as _FX  # noqa: E402
 ICONS = list(_ICONS)
@@ -37,6 +41,12 @@ def keyed(im):
     sat = d / (mx + 1e-6)
     bg = (h > 285) & (h < 338) & (sat > 0.5) & (mx > 0.25)           # magenta + its darker shadow, not violet robes
     fg = ~ndi.binary_dilation(bg, iterations=1)                      # every magenta-ish pixel is background, even enclosed gaps
+    # drop flat dark 'ground shadow / platform' slabs near the bottom
+    dark = fg & (mx < 0.36) & (h > 235) & (h < 330)
+    lab3, n3 = ndi.label(dark)
+    for i3, sl in enumerate(ndi.find_objects(lab3), 1):
+        hh = sl[0].stop - sl[0].start; ww = sl[1].stop - sl[1].start
+        if ww > 3 * hh and ww > 40 and sl[0].start > fg.shape[0] * 0.6: fg &= ~(lab3 == i3)
     fg = ndi.binary_opening(fg, iterations=1)
     lab2, n2 = ndi.label(fg)
     if n2 > 1:
@@ -98,7 +108,7 @@ if __name__ == '__main__':
     choices = json.load(open(CH)) if os.path.exists(CH) else {}
     keys = [k for k in list(DRAW) + ['tile_%d' % i for i in range(10)] + ['title_bg'] + ICONS + FXK if a.only == 'all' or k in a.only.split(',')]
     if a.sheet:
-        grps = [(list(DRAW)[:9], 'chars'), (list(DRAW)[9:], 'bosses'), (ICONS[:20], 'icons1'), (ICONS[20:], 'icons2')]
+        grps = [(list(DRAW)[:9], 'chars'), (list(DRAW)[9:23], 'bosses'), (list(DRAW)[23:], 'minions'), (ICONS[:20], 'icons1'), (ICONS[20:], 'icons2')]
         for grp, name in grps:
             cols = 6; cell = 192; rows = len(grp) * 2 // cols + 1; sh = Image.new('RGBA', (cols * cell, rows * cell), (40, 40, 60, 255)); n = 0
             for k in grp:

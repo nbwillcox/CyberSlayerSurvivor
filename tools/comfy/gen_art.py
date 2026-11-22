@@ -109,6 +109,29 @@ I = {
 }
 
 
+M = {  # minions, drone, loot
+    'mn_vanguard_gunner': 'a cyber-trooper soldier robot holding a rifle, facing right',
+    'mn_vanguard_engineer': 'a small builder drone robot with a welding torch arm, facing right',
+    'mn_vanguard_priest': 'a cyber-paladin knight with a glowing laser sword and small shield, facing right',
+    'mn_sniper_gunner': 'a ghostly rail-gun sniper robot with a long rifle, facing right',
+    'mn_sniper_engineer': 'a tesla drone, a small hovering robot with a glowing tesla coil on top, facing right',
+    'mn_sniper_priest': 'a rail-seraph angel construct holding a long glowing rifle, facing right',
+    'mn_aegis_gunner': 'an aegis shield-bearer robot holding a huge glowing shield',
+    'mn_aegis_engineer': 'a round shield drone projecting a blue hexagon barrier',
+    'mn_aegis_priest': 'a holo-cherub floating angel child with a golden halo and tiny wings',
+    'mn_detonator_gunner': 'a round micro-bomber robot ball with legs and a lit fuse',
+    'mn_detonator_engineer': 'a kamikaze drone carrying a red bomb, hovering',
+    'mn_detonator_priest': 'a radiant reliquary, a floating glowing golden holy relic orb with a halo',
+    'mn_fusion_gunner': 'a huge elite combat mech suit with shoulder cannons',
+    'mn_fusion_engineer': 'an orbital dreadnought drone, a big armored flying battle drone with cannons',
+    'mn_fusion_priest': 'an archangel construct made of golden hard light with large wings and a sword',
+    'drone': 'a small hovering quad-rotor assault drone with a plasma gun and a green glowing core, top-down view',
+    'coin': 'a shiny gold coin with an embossed star, slightly glowing',
+    'scrap': 'a glowing cyan energy scrap core, a hexagonal metal cog with a bright cyan core',
+    'health': 'a red cross health pack medkit, glowing softly',
+    'magnet': 'a red and silver horseshoe magnet power-up with electric sparks',
+    'chest': 'an ornate golden cyber-relic treasure chest with glowing cyan locks, three-quarter view',
+}
 FXT = ("High quality game VFX texture asset: {s}. Glowing, vibrant, bright, centered in the frame, on a pure solid black background, "
        "additive blending ready, no text, no border, no ground, no characters.")
 F = {
@@ -157,6 +180,14 @@ def jobs():
         yield k, SPRITE.format(s=s), 1024, 1024
     for k, s in T.items():
         yield k, TILE.format(s=s), 768, 768
+    BR = ('Make it bright, vivid and high-contrast: light metallic surfaces with glowing {c} accents, well lit, clearly visible against a dark background, '
+          'never dark or black, no black silhouette, no ground line, no ground shadow, no platform.')
+    CC = {'gunner': 'orange and steel', 'engineer': 'green and teal', 'priest': 'gold and white'}
+    for k, s in M.items():
+        if k.startswith('mn_') or k == 'drone':
+            c = CC.get(k.split('_')[-1], 'green and teal'); yield k, SPRITE.format(s=s) + ' ' + BR.format(c=c), 768, 768
+        else:
+            yield k, SPRITE.format(s=s), 768, 768
     for k, s in F.items():
         yield k, FXT.format(s=s), 512, 512
     for k, s in I.items():
