@@ -93,22 +93,32 @@
     if (card.kind === 'heal') { G.heal(p.maxHp * 0.5); return; }
     if (card.kind === 'gold') { G.addGold(card.v); return; }
     var it = p.items[card.id], m = CS.RAR[card.rar].m;
+    card.from = it ? it.lv : 0;
     if (!it) { it = WP.addItem(card.id, card.rar); }
     else { it.lv++; it.pw += m * (it.lv > 5 ? 1.35 : 1); if (card.rar > it.rar) it.rar = card.rar; }
+    if (card.dbl && it.lv < 10) { it.lv++; it.pw += m * (it.lv > 5 ? 1.35 : 1); }   // duplicate roll: doubled upgrade
+    if (card.dbl) it.pw += m * 0.5;
+    card.to = it.lv;
     if (card.bon) it.bon[card.bon] = (it.bon[card.bon] || 0) + (card.bon === 'aspd' ? 0.2 : card.bon === 'ls' ? 0.02 : 1);
     WP.recalc(); CS.MN.fillAll();
   };
   WP.cardInfo = function (card) {
     if (card.kind === 'heal') return { name: 'REPAIR KIT', lv: 'RESTORE 50% HP', desc: 'NO UPGRADES AVAILABLE. PATCH UP.', c: '#5cff8a' };
     if (card.kind === 'gold') return { name: 'GOLD CACHE', lv: '+' + card.v + ' GOLD', desc: 'NO UPGRADES AVAILABLE.', c: '#ffd700' };
-    var d = CS.ITEMS[card.id], it = G.p.items[card.id], nl = it ? it.lv + 1 : 1, desc;
+    var d = CS.ITEMS[card.id], it = G.p.items[card.id], nl = card.to !== undefined ? card.to : (it ? it.lv + 1 : 1), fl = card.from !== undefined ? card.from : nl - 1, desc;
     if (nl === 1) desc = d.d; else if (nl === 5) desc = 'AWAKENING: ' + d.a5 + ' - ' + d.t5; else if (nl === 10) desc = 'APEX: ' + d.a10 + ' - ' + d.t10; else desc = d.u + ' (x' + CS.RAR[card.rar].m + ')';
-    return { name: CS.itemName(card.id, G.cls), lv: nl === 1 ? 'NEW  LV 1' : 'LV ' + (nl - 1) + ' > LV ' + nl, desc: desc, c: d.c, bonus: card.bon ? BONS[card.bon] : null, cat: d.cat, awak: nl === 5 || nl === 10 };
+    return { name: CS.itemName(card.id, G.cls), lv: (card.dbl ? 'DOUBLE! ' : '') + (fl === 0 ? 'NEW  LV ' + nl : 'LV ' + fl + ' > LV ' + nl), desc: desc, c: d.c, bonus: card.bon ? BONS[card.bon] : null, cat: d.cat, awak: nl === 5 || nl === 10 || !!card.dbl };
   };
   WP.openChest = function () {
     var gold = Math.round((250 + G.stage * 83) * (0.9 + Math.random() * 0.2) * (1 + 0.08 * SV.sharedRank('greed')));
-    G.addGold(gold); var n = U.ri(1, 3), cards = [], cs;
-    for (var i = 0; i < n; i++) { cs = candidates(); if (!cs.length) { cards.push({ kind: 'gold', rar: 3, v: 200 }); G.addGold(200); continue; } var pk = cs[U.weighted(cs.map(function (c) { return c.w; }))], card = mkCard(pk, 2); cards.push(card); WP.apply(card); }
+    G.addGold(gold); var n = U.ri(1, 3), cards = [], cs, picked = {};
+    for (var i = 0; i < n; i++) {
+      cs = candidates().filter(function (c) { return !picked[c.id]; });
+      if (cs.length) { var pk = cs[U.weighted(cs.map(function (c) { return c.w; }))], card = mkCard(pk, 2); picked[pk.id] = card; cards.push(card); WP.apply(card); continue; }
+      var ids = Object.keys(picked);   // nothing new left: would duplicate -> boost an existing reward instead
+      if (ids.length && picked[ids[0]]) { var ex = picked[U.pick(ids)]; if (!ex.dbl) { ex.dbl = true; var it2 = G.p.items[ex.id]; if (it2 && it2.lv < 10) { it2.lv++; it2.pw += CS.RAR[ex.rar].m * (it2.lv > 5 ? 1.35 : 1); } if (it2) { it2.pw += CS.RAR[ex.rar].m * 0.5; ex.to = it2.lv; } WP.recalc(); CS.MN.fillAll(); continue; } }
+      G.addGold(200); cards.push({ kind: 'gold', rar: 3, v: 200 });
+    }
     return { gold: gold, cards: cards, t: 0 };
   };
 
