@@ -65,7 +65,7 @@
     if (o.purge) dmg *= e.tag === 'demon' ? 1.5 : e.tag === 'undead' ? 1.25 : 1;
     var ar = e.shred > 0 ? 0 : e.armor; dmg = Math.max(dmg * 0.2, dmg - ar);
     if (e.boss && e.act && e.act.name === 'blink' && e.act.t < 0.4) dmg *= 0.3;
-    e.hp -= dmg; e.flash = 2; e.last = o.src || '';
+    e.hp -= dmg; e.flash = 3; e.last = o.src || '';
     var st = G.stats.dmg; if (o.src) st[o.src] = (st[o.src] || 0) + dmg;
     if (o.kb) { var f = o.kb * (1 - e.kbr) * (crit && p.items.slug === undefined ? 1 : 1) * (1 + (o.src === 'slug' && crit ? (G.C.id === 'gunner' ? SV.classRank('gunner', 'hollow') * 0.08 : 0) : 0)); e.kx += (o.dx || 0) * f; e.ky += (o.dy || 0) * f; }
     var tcol = TCOL[o.type || 'phys'];
@@ -214,7 +214,7 @@
 
   function hazards(dt) {
     var p = G.p, hz = G.def.hz, h = G.hz, st = G.def.pal, i;
-    p.slide = hz.indexOf('ice') >= 0; p.inPool = 0;
+    p.slide = hz.indexOf('ice') >= 0 || hz.indexOf('zerog') >= 0; p.inPool = 0;
     if (hz.indexOf('slag') >= 0 || hz.indexOf('acid') >= 0) {
       var kind = hz.indexOf('acid') >= 0 ? 'acid' : 'slag', pl = poolAt(p.x, p.y, kind);
       if (pl) { p.inPool = kind === 'acid' ? 2 : 1; h.pt = (h.pt || 0) - dt; if (h.pt <= 0) { h.pt = 0.5; G.hurtPlayer((kind === 'acid' ? 4 : 7) * G.dmgScale(), pl.x, pl.y, 'hazard'); } }
@@ -241,7 +241,7 @@
     var rate = (2.6 + 1.5 * m + 0.14 * m * m) * (1 + 0.04 * G.stage) * (G.stageBoss ? 0.45 : 1);
     var cap = CS.BAL.maxEnemies * Math.min(1, 0.35 + t / 300); if (G.stageBoss) cap *= 0.5;
     G.spawnAcc += rate * dt; var w = weights();
-    while (G.spawnAcc >= 1) { G.spawnAcc--; if (G.en.n >= cap) break; var ty = TYPES[U.weighted(w)]; G.spawnRing(ty, 1, 540, { elite: t > 150 && Math.random() < Math.min(0.05, (t - 150) / 4000) }); }
+    while (G.spawnAcc >= 1) { G.spawnAcc--; if (G.en.n >= cap) break; var ty = TYPES[U.weighted(w)]; G.spawnRing(ty, 1, 540, { elite: t > (G.stage >= 8 ? 60 : 150) && Math.random() < Math.min(0.05, (t - 60) / 4000) * (G.stage >= 8 ? 3 : 1) }); }
     G.swarmT -= dt; if (G.swarmT <= 0) { G.swarmT = 50 - Math.min(20, m * 3); var n = Math.min(70, 26 + m * 6), ty2 = Math.random() < 0.7 ? 'skeleton' : TYPES[U.weighted(w)]; for (var i = 0; i < n && G.en.n < CS.BAL.maxEnemies; i++) { var a = i / n * 6.283; G.spawnEnemy(ty2, p.x + Math.cos(a) * 500, p.y + Math.sin(a) * 340, null); } G.banner = { t: 2.2, text: 'SWARM INCOMING', c: '#ff9a3c' }; AU.sfx('spawn'); }
     // mid-boss every 90s
     var nextMid = CS.BAL.midInterval * (G.midN + 1);
@@ -407,9 +407,9 @@
     if (G.def.hz.indexOf('slag') >= 0 || G.def.hz.indexOf('acid') >= 0) {
       var acid = G.def.hz.indexOf('acid') >= 0;
       G.poolsVisible(function (px, py, rr) {
-        var X = px - cx, Y = py - cy; ctx.fillStyle = acid ? '#10381a' : '#4a1a08'; ctx.beginPath(); ctx.ellipse(X, Y, rr + 4, rr * 0.8 + 4, 0, 0, 6.283); ctx.fill();
-        ctx.fillStyle = acid ? '#3fd02a' : '#ff6a1a'; ctx.beginPath(); ctx.ellipse(X, Y, rr, rr * 0.8, 0, 0, 6.283); ctx.fill();
-        ctx.fillStyle = acid ? '#b8ff6a' : '#ffd35a'; for (var b = 0; b < 4; b++) { var ph = (T * 0.8 + b * 0.27 + px * 0.01) % 1; ctx.fillRect(Math.round(X + Math.cos(b * 2 + px) * rr * 0.5), Math.round(Y - ph * 10 + Math.sin(b * 3) * rr * 0.3), 2, 2); }
+        var X = px - cx, Y = py - cy; ctx.fillStyle = A.hex(pal[2], 0.3); ctx.beginPath(); ctx.ellipse(X, Y, rr + 4, rr * 0.8 + 4, 0, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = 0.75; ctx.fillStyle = acid ? '#3fd02a' : pal[2]; ctx.beginPath(); ctx.ellipse(X, Y, rr, rr * 0.8, 0, 0, 6.283); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = acid ? '#b8ff6a' : pal[3]; for (var b = 0; b < 4; b++) { var ph = (T * 0.8 + b * 0.27 + px * 0.01) % 1; ctx.fillRect(Math.round(X + Math.cos(b * 2 + px) * rr * 0.5), Math.round(Y - ph * 10 + Math.sin(b * 3) * rr * 0.3), 2, 2); }
       });
     }
     if (G.def.hz.indexOf('conveyor') >= 0) {
@@ -467,7 +467,6 @@
       if (e.stun > 0 || e.slow > 0 || e.shred > 0) { ctx.fillStyle = e.stun > 0 ? '#c9a3ff' : '#6bff3c'; ctx.fillRect(Math.round(X - 2), Math.round(Y - e.r - 6), 4, 2); }
       if (e.type === 'hound' && e.st === 1) { var ddx = Math.cos(e.ang), ddy = Math.sin(e.ang); ctx.strokeStyle = '#ff4a4a'; ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + ddx * 190, Y + ddy * 190); ctx.stroke(); ctx.globalAlpha = 1; }
       A.draw(ctx, e.spr, X, Y - (e.type === 'ghost' ? 3 + Math.sin(G.t * 4 + e.uid) * 2 : Math.abs(Math.sin(G.t * 9 + e.uid)) * 1.5), e.face < 0, e.flash > 0, e.big * (e.elite ? 1.25 : 1));
-      if (e.flash > 0) e.flash--;
     }
     CS.MN.draw(ctx, cx, cy);
     // player

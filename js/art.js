@@ -174,12 +174,17 @@
 
   /* ---------- draw helpers ---------- */
   function white(s) { var c = document.createElement('canvas'); c.width = s.c.width; c.height = s.c.height; var g = c.getContext('2d'); g.drawImage(s.c, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); s.white = c; return c; }
+  function flipped(c) { var f = document.createElement('canvas'); f.width = c.width; f.height = c.height; var g = f.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return f; }
   A.draw = function (ctx, key, x, y, flip, flash, sc, rot, alpha) {
     var s = A.spr[key]; if (!s) return;
-    var img = flash ? (s.white || white(s)) : s.c, dw = s.dw * (sc || 1), dh = s.dh * (sc || 1), sx = s.frames > 1 ? (Math.floor(CS.t * 8) % s.frames) * s.fw : 0;
-    x = Math.round(x); y = Math.round(y);
+    var img, dw = s.dw * (sc || 1), dh = s.dh * (sc || 1), fr = s.frames > 1 ? Math.floor(CS.t * 8) % s.frames : 0;
+    if (flip && !rot) { // cached mirrored sheet: no save/restore per sprite
+      if (flash) { if (!s.fwhite) s.fwhite = flipped(s.white || white(s)); img = s.fwhite; } else { if (!s.fc) s.fc = flipped(s.c); img = s.fc; }
+      fr = s.frames > 1 ? s.frames - 1 - fr : 0; flip = false;
+    } else img = flash ? (s.white || white(s)) : s.c;
+    var sx = fr * s.fw; x = Math.round(x); y = Math.round(y);
     if (alpha !== undefined && alpha < 1) ctx.globalAlpha = alpha;
-    if (flip || rot) { ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (flip) ctx.scale(-1, 1); ctx.drawImage(img, sx, 0, s.fw, s.h, -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
+    if (rot) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); if (flip) ctx.scale(-1, 1); ctx.drawImage(img, sx, 0, s.fw, s.h, -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
     else ctx.drawImage(img, sx, 0, s.fw, s.h, x - (dw >> 1), y - (dh >> 1), dw, dh);
     if (alpha !== undefined && alpha < 1) ctx.globalAlpha = 1;
   };
@@ -195,7 +200,7 @@
           var im = new Image(); im.onload = function () {
             var old = A.spr[key], cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0);
             var fw = im.width / frames, dw = old ? old.dw : fw, dh = dw * im.height / fw; if (scale) { dw = fw * scale; dh = im.height * scale; }
-            A.spr[key] = { c: cv, w: im.width, h: im.height, fw: im.width / frames, frames: frames, dw: dw, dh: dh, white: null, proc: false }; A.loaded++; res();
+            A.spr[key] = { c: cv, w: im.width, h: im.height, fw: im.width / frames, frames: frames, dw: dw, dh: dh, white: null, fc: null, fwhite: null, proc: false }; A.loaded++; res();
           }; im.onerror = function () { res(); }; im.src = file;
         }));
       });

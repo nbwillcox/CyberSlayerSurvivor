@@ -9,7 +9,7 @@
     for (i = 0; i < n; i++) {
       e = a[i]; if (e.dead) continue;
       dx = p.x - e.x; dy = p.y - e.y; d = Math.sqrt(dx * dx + dy * dy) || 1; ux = dx / d; uy = dy / d;
-      if (e.buff > 0) e.buff -= dt; if (e.slow > 0) e.slow -= dt; if (e.shred > 0) e.shred -= dt; if (e.stun > 0) e.stun -= dt; if (e.cd > 0) e.cd -= dt; if (e.inv > 0) e.inv -= dt;
+      if (e.flash > 0) e.flash--; if (e.buff > 0) e.buff -= dt; if (e.slow > 0) e.slow -= dt; if (e.shred > 0) e.shred -= dt; if (e.stun > 0) e.stun -= dt; if (e.cd > 0) e.cd -= dt; if (e.inv > 0) e.inv -= dt;
       if (e.burn > 0) { e.burn -= dt; e.tick -= dt; if (e.tick <= 0) { e.tick = 0.5; G.hit(e, e.burnD * 0.5, { src: e.last || '', type: 'fire', noCrit: true, quiet: true }); if (e.dead) continue; } }
       sp = e.spd * (e.buff > 0 ? 1.5 : 1) * (e.slow > 0 ? 0.55 : 1) * (e.stun > 0 ? 0 : 1);
       var mvx = 0, mvy = 0;
