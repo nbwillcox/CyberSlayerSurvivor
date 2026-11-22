@@ -67,10 +67,11 @@
     o = o || {}; var c = ui.ctx, R = CS.RAR[card.rar], info = CS.WP.cardInfo(card), foc = ui.focus === id, hit = false, i;
     if (id) { ui.btns.push({ id: id, x: x, y: y, w: w, h: h, dis: false }); for (i = 0; i < ui.taps.length; i++) { var t = ui.taps[i]; if (t.x >= x && t.x < x + w && t.y >= y && t.y < y + h) { hit = true; ui.focus = id; } } if (foc && ui.confirm) hit = true; }
     var glow = card.rar >= 3 ? 0.5 + 0.5 * Math.sin(ui.t * 6) : 0;
+    if (info.awak) { var ga = 0.2 + 0.1 * Math.sin(ui.t * 3), gc = info.c || '#ffe44d'; for (i = 1; i <= 5; i++) { c.globalAlpha = ga / i; c.fillStyle = gc; c.fillRect(x - i * 3, y - i * 3, w + i * 6, h + i * 6); } c.globalAlpha = 1; }
     ui.panel(x, y, w, h, R.c, foc ? A.hex(R.c, 0.3) : '#0a0e1c', 0.97);
     c.fillStyle = R.c; c.fillRect(x, y, w, 3); c.fillRect(x + 1, y + h - 3, w - 2, 2); if (foc || glow) { c.globalAlpha = foc ? 0.9 : glow * 0.7; c.strokeStyle = R.t; c.lineWidth = 2; c.strokeRect(x + 2, y + 2, w - 4, h - 4); c.globalAlpha = 1; }
     ui.text(R.n, x + w / 2, y + 9, R.t, 1, 'center');
-    if (card.kind === 'item') { c.fillStyle = '#05070f'; c.fillRect(x + w / 2 - 28, y + 22, 56, 56); c.fillStyle = R.c; c.fillRect(x + w / 2 - 29, y + 21, 58, 1); c.fillRect(x + w / 2 - 29, y + 78, 58, 1); c.fillRect(x + w / 2 - 29, y + 21, 1, 58); c.fillRect(x + w / 2 + 28, y + 21, 1, 58); A.drawIcon(c, card.id, x + w / 2 - 24, y + 26, 2); }
+    if (card.kind === 'item') { c.fillStyle = '#05070f'; c.fillRect(x + w / 2 - 28, y + 22, 56, 56); c.fillStyle = R.c; c.fillRect(x + w / 2 - 29, y + 21, 58, 1); c.fillRect(x + w / 2 - 29, y + 78, 58, 1); c.fillRect(x + w / 2 - 29, y + 21, 1, 58); c.fillRect(x + w / 2 + 28, y + 21, 1, 58); if (info.awak) { var rg = c.createRadialGradient(x + w / 2, y + 50, 4, x + w / 2, y + 50, 46); rg.addColorStop(0, 'rgba(255,255,255,' + (0.35 + 0.15 * Math.sin(ui.t * 4)) + ')'); rg.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = rg; c.fillRect(x + w / 2 - 46, y + 4, 92, 92); } A.drawIcon(c, card.id, x + w / 2 - 24, y + 26, 2); }
     else { c.fillStyle = info.c; c.fillRect(x + w / 2 - 20, y + 34, 40, 32); }
     var ny = y + 86, nl = ui.wrap(info.name, Math.floor((w - 12) / 6)); nl.forEach(function (l, i) { ui.text(l, x + w / 2, ny + i * 10, '#fff', 1, 'center'); }); ny += nl.length * 10 + 4;
     ui.text(info.lv, x + w / 2, ny, info.awak ? '#ffe44d' : '#7df3ff', 1, 'center'); ny += 14;
@@ -100,7 +101,7 @@
     var b = G.bossOn; if (b && !b.dead) { var bw = 340, bx = (W - bw) >> 1; ui.bar(bx, 52, bw, 9, b.hp / b.mhp, b.mid ? '#ff7a3a' : '#ff2a5a', '#2a0c14'); ui.text(b.name, W >> 1, 64, '#ffd7d7', 1, 'center'); }
     // item grid (weapons row + defense row)
     var off = [], def = []; p.order.forEach(function (id) { (CS.ITEMS[id].cat === 'defense' ? def : off).push(id); });
-    function row(list, y) { list.forEach(function (id, i) { var it = p.items[id], x = 8 + i * 27, R = CS.RAR[it.rar]; ctx.fillStyle = R.c; ctx.fillRect(x - 1, y - 1, 26, 26); ctx.fillStyle = '#000'; ctx.fillRect(x, y, 24, 24); A.drawIcon(ctx, id, x, y, 1); ui.text('' + it.lv, x + 23, y + 17, it.lv >= 10 ? '#ffd700' : '#fff', 1, 'right'); if (it.lv >= 10) { ctx.fillStyle = '#ffd700'; ctx.fillRect(x, y, 24, 1); } }); }
+    function row(list, y) { list.forEach(function (id, i) { var it = p.items[id], x = 8 + i * 27, R = CS.RAR[it.rar]; if (it.lv >= 5) { var gl = it.lv >= 10 ? '#ffd700' : CS.ITEMS[id].c, ga = (it.lv >= 10 ? 0.4 : 0.28) + 0.12 * Math.sin(G.t * 3 + i); for (var q = 1; q <= 3; q++) { ctx.globalAlpha = ga / q; ctx.fillStyle = gl; ctx.fillRect(x - 1 - q * 2, y - 1 - q * 2, 26 + q * 4, 26 + q * 4); } ctx.globalAlpha = 1; } ctx.fillStyle = R.c; ctx.fillRect(x - 1, y - 1, 26, 26); ctx.fillStyle = '#000'; ctx.fillRect(x, y, 24, 24); A.drawIcon(ctx, id, x, y, 1); ui.text('' + it.lv, x + 23, y + 17, it.lv >= 10 ? '#ffd700' : '#fff', 1, 'right'); if (it.lv >= 10) { ctx.fillStyle = '#ffd700'; ctx.fillRect(x, y, 24, 1); } }); }
     row(off, H - 62); row(def, H - 34);
     ui.text('WEAPONS & MINIONS', 8, H - 72, '#5a6a88', 1); ui.text('DEFENSE', 8, H - 44, '#5a6a88', 1, 'left', false);
     // banner
