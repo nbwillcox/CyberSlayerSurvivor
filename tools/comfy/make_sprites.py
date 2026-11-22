@@ -22,6 +22,9 @@ CH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'art_choices.json'
 DRAW = {'gunner': 54, 'engineer': 54, 'priest': 54, 'skeleton': 36, 'ghost': 36, 'hound': 46, 'lich': 46, 'golem': 58, 'banshee': 40,
         'mb_0': 96, 'mb_1': 96, 'mb_2': 96, 'mb_3': 96, 'boss_0': 128, 'boss_1': 128, 'boss_2': 128, 'boss_3': 128, 'boss_4': 128,
         'boss_5': 128, 'boss_6': 128, 'boss_7': 128, 'boss_8': 128, 'boss_9': 168}   # max dimension in px, drawn 1:1 in game
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gen_art import I as _ICONS  # noqa: E402
+ICONS = list(_ICONS)
 BG = ['#0b0618', '#1c0d05', '#050f24', '#1a0510', '#04060d', '#14091f', '#06150a', '#04141a', '#12040a', '#1a0a05']
 
 
@@ -61,6 +64,11 @@ def sprite(path, size):
     return pixelate(keyed(Image.open(path)), size)
 
 
+def icon(path):
+    sp = pixelate(keyed(Image.open(path)), 42)
+    out = Image.new('RGBA', (48, 48), (0, 0, 0, 0)); out.alpha_composite(sp, ((48 - sp.width) // 2, (48 - sp.height) // 2)); return out
+
+
 def tile(path, i):
     im = Image.open(path).convert('RGB').resize((512, 512), Image.LANCZOS); a = np.asarray(im).astype(np.float32)
     n = 512; x = np.linspace(-1, 1, n); w = 0.5 - 0.5 * np.cos(np.pi * (1 - np.abs(x)) )     # 0 at edges, 1 at centre
@@ -82,15 +90,16 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--sheet', action='store_true'); ap.add_argument('--only', default='all'); a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     choices = json.load(open(CH)) if os.path.exists(CH) else {}
-    keys = [k for k in list(DRAW) + ['tile_%d' % i for i in range(10)] + ['title_bg'] if a.only == 'all' or k in a.only.split(',')]
+    keys = [k for k in list(DRAW) + ['tile_%d' % i for i in range(10)] + ['title_bg'] + ICONS if a.only == 'all' or k in a.only.split(',')]
     if a.sheet:
-        for grp, name in ((list(DRAW)[:9], 'chars'), (list(DRAW)[9:], 'bosses')):
+        grps = [(list(DRAW)[:9], 'chars'), (list(DRAW)[9:], 'bosses'), (ICONS[:20], 'icons1'), (ICONS[20:], 'icons2')]
+        for grp, name in grps:
             cols = 6; cell = 192; rows = len(grp) * 2 // cols + 1; sh = Image.new('RGBA', (cols * cell, rows * cell), (40, 40, 60, 255)); n = 0
             for k in grp:
                 for t in (1, 2):
                     p = os.path.join(RAW, '%s_%d.png' % (k, t))
                     if os.path.exists(p):
-                        sp = sprite(p, DRAW[k]); f = (cell - 8) / max(sp.size); sp = sp.resize((max(1, int(sp.width * f)), max(1, int(sp.height * f))), Image.NEAREST); sh.alpha_composite(sp, ((n % cols) * cell + 4, (n // cols) * cell + 4))
+                        sp = sprite(p, DRAW[k]) if k in DRAW else icon(p); f = (cell - 8) / max(sp.size); sp = sp.resize((max(1, int(sp.width * f)), max(1, int(sp.height * f))), Image.NEAREST); sh.alpha_composite(sp, ((n % cols) * cell + 4, (n // cols) * cell + 4))
                     n += 1
             sh.convert('RGB').save(os.path.join(RAW, 'contact_%s.png' % name)); print('sheet', name)
         raise SystemExit
@@ -99,6 +108,7 @@ if __name__ == '__main__':
         if not os.path.exists(p):
             print('missing', p); continue
         if k in DRAW: sprite(p, DRAW[k]).save(os.path.join(OUT, k + '.png'))
+        elif k.startswith('icon_'): icon(p).save(os.path.join(OUT, k + '.png'))
         elif k.startswith('tile_'): tile(p, int(k[5:])).save(os.path.join(OUT, k + '.png'))
         else: title(p).save(os.path.join(OUT, k + '.png'))
         print('wrote', k, 'take', t)

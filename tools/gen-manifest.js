@@ -15,6 +15,7 @@ const keys = Object.keys(draw); for (let i = 0; i < 10; i++) keys.push('tile_' +
 CS.MIDBOSSES.forEach((m, i) => { keys.push('mb_' + i); draw['mb_' + i] = 64; });
 CS.STAGES.forEach((s, i) => { keys.push('boss_' + i); draw['boss_' + i] = i === 9 ? 120 : 96; });
 Object.keys(CS.ITEMS).forEach(id => { keys.push('icon_' + id); draw['icon_' + id] = 24; });
+['vanguard', 'sniper', 'aegis', 'detonator', 'fusion'].forEach(k => ['gunner', 'engineer', 'priest'].forEach(c => { keys.push(`icon_${k}_${c}`); draw[`icon_${k}_${c}`] = 24; }));
 const sfx = ['slug', 'plasma', 'bolt', 'zap', 'hit', 'crit', 'kill', 'boom', 'smallboom', 'coin', 'scrap', 'whoosh', 'heal', 'levelup', 'pick', 'chest', 'warning', 'hurt', 'shield', 'shieldbreak', 'dodge', 'laser', 'beam', 'nova', 'spawn', 'boss', 'slam', 'click', 'move', 'buy', 'deny', 'victory', 'defeat', 'saw', 'summon', 'telegraph'];
 const music = ['music_menu'].concat(CS.STAGES.map((s, i) => 'music_' + i));
 if (process.argv.includes('--catalog')) {

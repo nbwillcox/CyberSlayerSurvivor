@@ -65,6 +65,50 @@ TITLE = ('Cinematic neon cyberpunk gothic wide illustration, a ruined cyber-cath
          'dramatic backlight, dark vignette, pixel art style, no text.')
 
 
+ICON = ("Pixel art game item icon of {s}. Single centered emblem filling the frame, bold dark outline, vibrant saturated colours, "
+        "16-bit retro style, isolated on a flat solid pure magenta background (#FF00FF), no ground shadow, absolutely no text or letters.")
+I = {
+    'icon_slug': 'a heavy futuristic revolver pistol with a glowing orange slug round',
+    'icon_drone': 'a small hovering assault drone with a plasma gun and green glowing core',
+    'icon_bolt': 'a golden holy lightning bolt with cyan sparks',
+    'icon_grenade': 'a glowing plasma grenade launcher shell with an orange explosion burst',
+    'icon_tesla': 'a tesla coil emitting blue chain lightning',
+    'icon_nova': 'an expanding ring of golden holy fire',
+    'icon_orbital': 'an orbital satellite firing a bright pink vertical ion beam',
+    'icon_nanite': 'a swirling cloud of green nanobots',
+    'icon_saw': 'a spinning neon steel circular sawblade with cyan glow',
+    'icon_turret': 'an automatic gun turret nest with twin barrels',
+    'icon_stim': 'a red injector syringe filled with glowing stim fluid',
+    'icon_gunship': 'an attack helicopter gunship firing, seen from the front',
+    'icon_dronebay': 'a drone launch bay with three small drones flying out',
+    'icon_emp': 'an electromagnetic pulse emitter ring with blue lightning arcs',
+    'icon_fabricator': 'a factory robot arm assembling a small kamikaze drone bomb',
+    'icon_sanctum': 'a sacred circle on the ground burning with golden holy fire and runes',
+    'icon_litany': 'an open holy book emitting violet light and glowing words',
+    'icon_wings': 'a pair of glowing white feathered angel wings',
+    'icon_vanguard_gunner': 'a cyber-trooper soldier robot holding a rifle',
+    'icon_vanguard_engineer': 'a builder drone robot with a welding torch',
+    'icon_vanguard_priest': 'a cyber-paladin knight with a glowing laser sword and shield',
+    'icon_sniper_gunner': 'a ghostly rail-gun sniper robot with a long rifle',
+    'icon_sniper_engineer': 'a tesla drone with a glowing coil on top',
+    'icon_sniper_priest': 'a rail-seraph angel construct holding a long glowing rifle',
+    'icon_aegis_gunner': 'an aegis shield-bearer robot holding a huge shield',
+    'icon_aegis_engineer': 'a shield drone projecting a blue hexagon barrier',
+    'icon_aegis_priest': 'a holo-cherub floating angel child with a golden halo',
+    'icon_detonator_gunner': 'a round micro-bomber robot ball with a lit fuse',
+    'icon_detonator_engineer': 'a kamikaze drone carrying a red bomb',
+    'icon_detonator_priest': 'a radiant reliquary, a glowing golden holy relic orb',
+    'icon_fusion_gunner': 'a huge elite combat mech suit',
+    'icon_fusion_engineer': 'an orbital dreadnought drone, a big armored flying battle drone',
+    'icon_fusion_priest': 'an archangel construct made of golden hard light',
+    'icon_plating': 'a titanium armor chestplate with glowing seams',
+    'icon_regen': 'a green glowing heart woven with nanite threads',
+    'icon_deflector': 'a blue energy shield bubble deflecting a hit',
+    'icon_thrusters': 'winged boots with purple glowing thrusters',
+    'icon_graviton': 'a swirling black hole orb with a golden ring',
+}
+
+
 def graph(prompt, w, h, seed, prefix):
     return {
         '1': {'class_type': 'UNETLoader', 'inputs': {'unet_name': 'z_image_turbo_bf16.safetensors', 'weight_dtype': 'default'}},
@@ -94,6 +138,8 @@ def jobs():
         yield k, SPRITE.format(s=s), 1024, 1024
     for k, s in T.items():
         yield k, TILE.format(s=s), 768, 768
+    for k, s in I.items():
+        yield k, ICON.format(s=s), 640, 640
     yield 'title_bg', TITLE, 1344, 768
 
 
