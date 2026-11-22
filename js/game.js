@@ -163,7 +163,7 @@
   };
   G.kill = function (e, src) {
     if (e.dead) return; e.dead = true; var p = G.p; G.stats.kills++; p.kills++;
-    G.addXp(e.xp); fx.xp(e.x, e.y); AU.sfx('kill');
+    G.addXp(e.xp); fx.xp(e.x, e.y); AU.sfx('kill'); if (p.items.stim) CS.WP.onKill();
     var gm = p.goldMul * (src === 'sniper' || src === 'drone' || src === 'detonator' || src === 'vanguard' || src === 'aegis' || src === 'fusion' ? 1 + 0.15 * SV.classRank('engineer', 'recycler') * (G.cls === 'engineer' ? 1 : 0) : 1);
     if (Math.random() < e.gold) { var v = Math.max(1, Math.round((e.elite ? 6 : e.type === 'golem' ? 8 : 2) * (1 + 0.15 * G.stage) * gm)); G.drop('coin', e.x, e.y, v); }
     if (e.scrap) G.drop('scrap', e.x, e.y, 3 + G.stage); else if (Math.random() < 0.05) G.drop('scrap', e.x, e.y, 1);
@@ -384,7 +384,7 @@
     for (i = 0; i < G.en.n; i++) { e = G.en.a[i]; if (e.sawCd > 0) e.sawCd -= dt; }
     director(dt); hazards(dt);
     // player movement
-    var mv = In.move(), spd = p.spd * (p.hurtT > 0 ? 1 : 1) * (p.inPool === 2 ? 0.6 : 1), k = p.slide ? 2.4 : 15, f = 1 - Math.exp(-k * dt);
+    var mv = In.move(), spd = p.spd * (p.spdMul || 1) * (p.inPool === 2 ? 0.6 : 1), k = p.slide ? 2.4 : 15, f = 1 - Math.exp(-k * dt);
     p.vx += (mv.x * spd - p.vx) * f; p.vy += (mv.y * spd - p.vy) * f; p.x += p.vx * dt; p.y += p.vy * dt;
     if (Math.abs(mv.x) > 0.1) p.face = mv.x > 0 ? 1 : -1; p.bob += dt * (Math.hypot(p.vx, p.vy) > 20 ? 12 : 3);
     if (p.dead) { G.over = true; G.won = false; return; }

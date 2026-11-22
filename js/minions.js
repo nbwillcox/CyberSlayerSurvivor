@@ -5,7 +5,7 @@
   MN.clear = function () { };
   MN.spawn = function (kind, x, y, it) {
     var m = G.mn.spawn(); if (!m) return null; var k = it ? it.pw : 1, lv = it ? it.lv : 1, hp;
-    m.kind = kind; m.item = it ? it.id : ''; m.x = x; m.y = y; m.vx = m.vy = 0; m.dead = false; m.flash = 0; m.t = Math.random() * 6; m.hurt = 0; m.cd = 0.5; m.giant = kind === 'giant'; m.aux = 0; m.sz = 1; m.tgt = null; m.face = 1;
+    m.kind = kind; m.item = it ? it.id : ''; m.x = x; m.y = y; m.vx = m.vy = 0; m.dead = false; m.flash = 0; m.t = Math.random() * 6; m.hurt = 0; m.cd = 0.5; m.giant = kind === 'giant'; m.life = 0; m.aux = 0; m.sz = 1; m.tgt = null; m.face = 1;
     if (kind === 'vanguard') { hp = 45 * (1 + 0.3 * (k - 1)); m.r = 6; if (lv >= 10) { hp *= 2.2; m.r = 9; m.sz = 1.5; } }
     else if (kind === 'sniper') { hp = 28 * (1 + 0.3 * (k - 1)); m.r = 5; }
     else if (kind === 'aegis') { hp = 40 * (1 + 0.3 * (k - 1)); m.r = 6; }
@@ -15,7 +15,7 @@
   };
   var KINDS = ['vanguard', 'sniper', 'aegis', 'detonator'];
   var counts = { vanguard: 0, sniper: 0, aegis: 0, detonator: 0, giant: 0 };
-  function countAll() { var i, m; for (var k in counts) counts[k] = 0; for (i = 0; i < G.mn.n; i++) { m = G.mn.a[i]; counts[m.kind]++; } }
+  function countAll() { var i, m; for (var k in counts) counts[k] = 0; for (i = 0; i < G.mn.n; i++) { m = G.mn.a[i]; if (m.life > 0) continue; counts[m.kind]++; } }
   MN.fillAll = function () {
     var p = G.p; countAll();
     KINDS.forEach(function (id) { var it = p.items[id]; if (!it) return; var tg = WP.minionTarget(id); while (counts[id] < tg && G.mn.n < WP.minionCap()) { var a = Math.random() * 6.283; if (MN.spawn(id, p.x + Math.cos(a) * 30, p.y + Math.sin(a) * 30, it)) counts[id]++; else break; } });
@@ -48,7 +48,7 @@
     for (i = a.n - 1; i >= 0; i--) {
       m = a.a[i]; it = p.items[m.item] || p.items.fusion || { pw: 1, lv: 1, bon: {} };
       if (m.hp <= 0 || m.dead) { if (!m.dead || m.hp <= 0) { fx.burst(m.x, m.y, 10, '#ff9a3c', 100, 0.4, 2); } a.kill(i); continue; }
-      var idx = ci[m.kind]++, n = tot[m.kind] || 1, k2 = it.pw, lv = it.lv; m.t += dt; m.cd -= dt; if (m.flash > 0) m.flash--;
+      var idx = ci[m.kind]++, n = tot[m.kind] || 1, k2 = it.pw, lv = it.lv; m.t += dt; m.cd -= dt; if (m.life > 0) { m.life -= dt; if (m.life <= 0) { MN.boom(m, it); m.dead = true; m.hp = 0; continue; } } if (m.flash > 0) m.flash--;
       if (nr > 0 && m.hp < m.mhp) m.hp = Math.min(m.mhp, m.hp + m.mhp * 0.012 * nr * dt);
       // contact damage taken from enemies
       m.hurt -= dt; if (m.hurt <= 0 && m.kind !== 'detonator') { var ne = G.nearest(m.x, m.y, m.r + 3); if (ne) { m.hp -= Math.max(1, ne.dmg * 0.5 * (m.giant ? 0.5 : 1)); m.hurt = 0.5; m.flash = 2; } }
@@ -83,8 +83,8 @@
   };
   MN.boom = function (m, it) {
     var k = it.pw, lv = it.lv, R = (40 + 3 * k) * (lv >= 10 ? 2.2 : 1), dmg = 38 * (1 + 0.3 * (k - 1)) * G.p.mAtk;
-    G.explode(m.x, m.y, R, dmg, { src: 'detonator', col: '#ff5050', kb: 260 });
-    if (lv >= 5) for (var i = 0; i < 3; i++) { var a = Math.random() * 6.283, d = R * 0.9; G.explode(m.x + Math.cos(a) * d, m.y + Math.sin(a) * d, 26, dmg * 0.4, { src: 'detonator', col: '#ffb347', quiet: i > 0 }); }
+    var sr = m.item === 'fabricator' ? 'fabricator' : 'detonator'; G.explode(m.x, m.y, R, dmg, { src: sr, col: '#ff5050', kb: 260 });
+    if (lv >= 5) for (var i = 0; i < 3; i++) { var a = Math.random() * 6.283, d = R * 0.9; G.explode(m.x + Math.cos(a) * d, m.y + Math.sin(a) * d, 26, dmg * 0.4, { src: sr, col: '#ffb347', quiet: i > 0 }); }
     if (lv >= 10) fx.shake(0.4);
   };
 

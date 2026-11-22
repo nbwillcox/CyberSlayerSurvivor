@@ -71,8 +71,8 @@
     CS.ITEM_ORDER.forEach(function (id) {
       var d = CS.ITEMS[id], it = p.items[id];
       if (d.cls && d.cls !== G.cls) return;
-      if (it) { if (it.lv < 10) out.push({ id: id, isNew: false, w: 1.4 }); }
-      else if (d.cat === 'defense' || off < CS.MAX_OFFENSE) { if (d.cat !== 'primary') out.push({ id: id, isNew: true, w: d.cat === 'defense' ? 0.9 : 1 }); }
+      if (it) { if (it.lv < 10) out.push({ id: id, isNew: false, w: d.cls ? 1.8 : 1.4 }); }
+      else if (d.cat === 'defense' || off < CS.MAX_OFFENSE) { if (d.cat !== 'primary') out.push({ id: id, isNew: true, w: d.cat === 'defense' ? 0.9 : d.cls ? 1.5 : 1 }); }
     });
     return out;
   }
@@ -125,6 +125,8 @@
   /* ---------------- player-level systems ---------------- */
   WP.updatePlayer = function (dt) {
     var p = G.p, it = p.items, i;
+    p.spdMul = 1; if (!it.stim) p.cdMul = 1; if (p.litanyT > 0) { p.litanyT -= dt; if (it.litany && it.litany.lv >= 5) p.spdMul += 0.15; }
+    p.dmgMul = (it.stim && it.stim.lv >= 10 && (it.stim.fr || 0) >= 0.9 ? 1.4 : 1) * (p.litanyT > 0 ? p.litanyMul : 1);
     if (p.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + p.regen * dt);
     if (p.dashCd > 0) p.dashCd -= dt; if (p.burstCd > 0) p.burstCd -= dt; if (p.aegisCd > 0) p.aegisCd -= dt;
     if (p.aegisT > 0) { p.aegisT -= dt; p.inv = Math.max(p.inv, 0.1); }
@@ -302,6 +304,90 @@
     AU.sfx('saw');
   };
 
+
+  /* ---------------- class-exclusive upgrades ---------------- */
+  UP.turret = function (it, dt) {
+    var p = G.p, i, t, lv = it.lv, ar = it.sh; it.cd -= dt;
+    for (i = ar.length - 1; i >= 0; i--) {
+      t = ar[i]; t.life -= dt; if (t.life <= 0) { fx.burst(t.x, t.y, 8, '#ffb347', 100, 0.3, 2); ar.splice(i, 1); continue; }
+      t.cd -= dt; t.rk -= dt; var tg = G.nearest(t.x, t.y, 230);
+      if (tg) {
+        t.ang = Math.atan2(tg.y - t.y, tg.x - t.x);
+        if (t.cd <= 0) { t.cd = (lv >= 5 ? 0.28 : 0.45) / (1 + (it.bon.aspd || 0)) * p.balMul; var b = lv >= 5 ? 2 : 1, q; for (q = 0; q < b; q++) G.shot(t.x, t.y - 4, t.ang + (Math.random() - 0.5) * 0.12, 440, 6 * sc(it) * (lv >= 10 ? 1.6 : 1), { src: 'turret', spr: 'shot_slug', life: 0.55, kb: 60 }); AU.sfx('plasma'); }
+        if (lv >= 10 && t.rk <= 0) { t.rk = 2.2; G.explode(tg.x, tg.y, 40, 26 * sc(it), { src: 'turret', col: '#ff9a3c' }); fx.v('line', t.x, t.y, { x2: tg.x, y2: tg.y, c: '#ffd35a', w: 2, life: 0.12 }); }
+      }
+    }
+    if (it.cd > 0) return; if (!G.nearest(p.x, p.y, 260)) { it.cd = 0.3; return; }
+    it.cd = cd(it, 7, 0.05, 3); var n = 1 + Math.floor(lv / 3) + pp(it), cap = 3 + Math.floor(lv / 2), k;
+    for (k = 0; k < n && ar.length < cap; k++) { var a = Math.random() * 6.283; ar.push({ x: p.x + Math.cos(a) * 34, y: p.y + Math.sin(a) * 28, life: 9 + 0.4 * it.pw, cd: 0.3, rk: 1, ang: 0 }); fx.v('ring', p.x + Math.cos(a) * 34, p.y + Math.sin(a) * 28, { r: 3, r2: 16, c: '#ffb347', w: 2, life: 0.2 }); }
+    AU.sfx('spawn');
+  };
+  UP.stim = function (it, dt) {
+    var p = G.p, mx = 10 + 2 * it.lv; it.stk = it.stk || 0; it.dec = (it.dec || 0) - dt;
+    if (it.dec <= 0 && it.stk > 0) { it.stk = Math.max(0, it.stk - 1); it.dec = 0.35; }
+    var fr = it.stk / mx; p.cdMul = 1 - Math.min(0.5, 0.3 * fr * (1 + 0.06 * it.lv)); it.fr = fr; p.spdMul = (p.spdMul || 1) + 0.18 * fr;
+  };
+  WP.onKill = function () {
+    var it = G.p.items.stim; if (!it) return; var mx = 10 + 2 * it.lv; it.stk = Math.min(mx, (it.stk || 0) + 1); it.dec = 2.6 + 0.1 * it.lv;
+    if (it.lv >= 5 && it.stk >= mx / 2 && Math.random() < 0.5) G.heal(1, true);
+  };
+  UP.gunship = function (it, dt) {
+    var p = G.p, lv = it.lv, i; it.cd -= dt;
+    for (i = it.q.length - 1; i >= 0; i--) { var e = it.q[i]; e.t -= dt; if (e.t <= 0) { G.explode(e.x, e.y, lv >= 10 ? 44 : 32 + it.pw, 24 * sc(it, 0.32), { src: 'gunship', col: '#ffb347', kb: 160 }); it.q.splice(i, 1); } }
+    if (it.cd > 0) return; var tg = G.nearest(p.x, p.y, 380); if (!tg) { it.cd = 0.2; return; }
+    it.cd = cd(it, 10, 0.05, 4.5); var lines = lv >= 10 ? 3 : lv >= 5 ? 2 : 1, ang = Math.atan2(tg.y - p.y, tg.x - p.x) + (Math.random() < 0.5 ? 1.5708 : 0), ca = Math.cos(ang), sa = Math.sin(ang), l, j;
+    for (l = 0; l < lines; l++) { var off = (l - (lines - 1) / 2) * 52, sx = tg.x - ca * 260 - sa * off, sy = tg.y - sa * 260 + ca * off; fx.v('line', sx, sy, { x2: sx + ca * 520, y2: sy + sa * 520, c: '#ffd35a', w: 2, life: 0.9 }); for (j = 0; j < 9; j++) it.q.push({ t: 0.35 + j * 0.09, x: sx + ca * j * 60, y: sy + sa * j * 60 }); }
+    AU.sfx('laser');
+  };
+  function bayLife(d, it, dt, mhp) {
+    if (!d.init) { d.init = 1; d.hp = d.mhp = mhp; d.rt = 0; d.hurt = 0; d.cd = Math.random(); }
+    if (d.rt > 0) { d.rt -= dt; if (d.rt <= 0) { d.hp = d.mhp; d.x = G.p.x; d.y = G.p.y; d.sp = 0.5; AU.sfx('spawn'); } return false; }
+    if (d.mhp !== mhp) { d.hp += mhp - d.mhp; d.mhp = mhp; }
+    if (d.sp > 0) d.sp -= dt; if (d.flash > 0) d.flash--;
+    d.hurt -= dt; if (d.hurt <= 0) { var ne = G.nearest(d.x, d.y, 9); if (ne) { d.hp -= Math.max(1, ne.dmg * 0.6); d.hurt = 0.5; d.flash = 3; } }
+    if (d.hp <= 0) { d.rt = 3.5; fx.burst(d.x, d.y, 10, '#4dffb0', 110, 0.35, 2); AU.sfx('smallboom'); return false; }
+    return true;
+  }
+  UP.dronebay = function (it, dt) {
+    var p = G.p, lv = it.lv, n = Math.min(10, 1 + Math.floor(lv / 2) + pp(it) + (lv >= 10 ? 3 : 0)), i, d, cap = G.cls === 'engineer' ? SV.classRank('engineer', 'capacitor') : 0;
+    while (it.dr.length < n) it.dr.push({ x: p.x, y: p.y, a: it.dr.length * 6.283 / n, init: 0 });
+    for (i = 0; i < it.dr.length; i++) {
+      d = it.dr[i]; if (!bayLife(d, it, dt, Math.round(22 * sc(it)))) continue;
+      d.a += dt * 1.5; var R = 54 + (i % 2) * 14, tx = p.x + Math.cos(d.a + i) * R, ty = p.y + Math.sin(d.a + i) * R * 0.8; d.x += (tx - d.x) * Math.min(1, dt * 8); d.y += (ty - d.y) * Math.min(1, dt * 8);
+      d.cd -= dt; if (d.cd <= 0) { var tg = G.nearest(d.x, d.y, 240); if (tg) { d.cd = (lv >= 10 ? 0.45 : 1.2) * Math.pow(0.95, it.pw - 1) / (1 + (it.bon.aspd || 0)) / (1 + 0.04 * cap); G.shot(d.x, d.y, Math.atan2(tg.y - d.y, tg.x - d.x), 420, 5 * sc(it), { src: 'dronebay', spr: 'shot_plasma', life: 0.6, kb: 50, type: 'energy', chain: lv >= 5 ? 1 + (lv >= 8 ? 1 : 0) : 0 }); AU.sfx('plasma'); } else d.cd = 0.15; }
+    }
+  };
+  UP.emp = function (it, dt) {
+    var p = G.p, lv = it.lv; it.cd -= dt; if (it.cd > 0) return; if (G.near(p.x, p.y, 120) < 2) { it.cd = 0.25; return; }
+    it.cd = cd(it, 8, 0.06, 3.5); var R = (100 + 8 * it.pw) * (lv >= 10 ? 1.6 : 1), dmg = 20 * sc(it);
+    G.explode(p.x, p.y, R, dmg, { src: 'emp', stun: lv >= 10 ? 3 : 1.2, kb: 120, type: 'tesla', col: '#7df3ff' });
+    if (lv >= 5) { var l = G.nearList(p.x, p.y, R), k; for (k = 0; k < Math.min(3, l.length); k++) if (!l[k].dead) G.chain(l[k], dmg * 0.6, 3, 100, { src: 'emp', type: 'tesla', noChain: true, col: '#7df3ff' }); }
+    fx.shake(0.25);
+  };
+  UP.fabricator = function (it, dt) {
+    var p = G.p, lv = it.lv; it.cd -= dt; if (it.cd > 0) return; if (!G.nearest(p.x, p.y, 300)) { it.cd = 0.3; return; }
+    it.cd = cd(it, 12, 0.05, 5); var n = 3 + Math.floor(lv * 0.7) + pp(it), i; if (lv >= 10) n += 4;
+    for (i = 0; i < n && G.mn.n < 60; i++) { var a = i / n * 6.283, m = CS.MN.spawn('detonator', p.x + Math.cos(a) * 20, p.y + Math.sin(a) * 20, it); if (m) { m.item = 'fabricator'; m.life = 8; m.spr = 'mn_detonator_' + G.cls; } }
+    AU.sfx('summon'); fx.v('ring', p.x, p.y, { r: 6, r2: 40, c: '#ff7a3c', w: 2, life: 0.3 });
+  };
+  UP.sanctum = function (it, dt) {
+    var p = G.p, lv = it.lv; it.t -= dt; if (it.t > 0) return; it.t = 0.4;
+    var R = (70 + 6 * it.pw) * (lv >= 10 ? 1.6 : 1), l = G.nearList(p.x, p.y, R), i, e; it.r = R;
+    for (i = 0; i < l.length; i++) { e = l[i]; if (e.dead) continue; if (lv >= 5) e.slow = 0.6; if (lv >= 10) { e.burn = 1.5; e.burnD = 6 * it.pw; } G.hit(e, 6 * sc(it), { src: 'sanctum', type: 'holy', purge: true, noCrit: true, quiet: true }); }
+    if (l.length && p.hp < p.maxHp) G.heal((0.25 + 0.08 * it.pw) * Math.min(3, l.length), true);
+  };
+  UP.litany = function (it, dt) {
+    var p = G.p, lv = it.lv; it.cd -= dt; if (it.cd > 0) return; if (!G.nearest(p.x, p.y, 320)) { it.cd = 0.5; return; }
+    it.cd = cd(it, 17, 0.04, 8); p.litanyT = 6; p.litanyMul = 1.25 + 0.03 * it.pw; CS.MN.healAll(); if (lv >= 10) p.inv = Math.max(p.inv, 2);
+    fx.v('ring', p.x, p.y, { r: 8, r2: 110, c: '#c9a3ff', w: 3, life: 0.5 }); fx.num(p.x, p.y - 26, 'BATTLE LITANY', '#c9a3ff', 1); AU.sfx('levelup');
+  };
+  UP.wings = function (it, dt) {
+    var p = G.p, lv = it.lv; it.cd -= dt; if (it.cd > 0) return; var tg = G.nearest(p.x, p.y, 300); if (!tg) { it.cd = 0.15; return; }
+    it.cd = cd(it, 2.2, 0.06, 0.9); var n = 3 + Math.floor(lv * 0.8) + pp(it); if (lv >= 10) n *= 2; var base = Math.atan2(tg.y - p.y, tg.x - p.x), i;
+    for (i = 0; i < n; i++) G.shot(p.x, p.y - 4, base + (i - (n - 1) / 2) * 0.22 + U.rr(-0.08, 0.08), 290, 8 * sc(it), { src: 'wings', spr: 'shot_bolt', home: 7, life: 1.6, kb: 40, type: 'holy', purge: true, pierce: lv >= 5 ? (lv >= 10 ? 2 : 1) : 0 });
+    AU.sfx('bolt');
+  };
+
   /* minion items: spawning handled by MN; fusion has its own timer */
   ['vanguard', 'sniper', 'aegis', 'detonator'].forEach(function (id) { UP[id] = function (it, dt) { /* maintained in MN.update */ }; });
   UP.fusion = function (it, dt) { it.t += dt; var interval = Math.max(7, 20 - 1.2 * it.pw) * (it.lv >= 10 ? 0.55 : 1); if (it.t >= interval) { if (CS.MN.fuse(it)) it.t = 0; else it.t = interval - 1.5; } };
@@ -313,6 +399,11 @@
     var p = G.p, it = p.items, A = CS.art, i, d;
     if (it.drone) { it.drone.dr.forEach(function (d, i) { if (d.rt > 0) return; A.draw(ctx, 'drone', d.x - cx, d.y - cy + Math.sin(G.t * 8 + i) * 1.5, false, d.flash > 0, 1, 0, d.spawn > 0 ? 0.5 : 1); if (d.hp < d.mhp) { ctx.fillStyle = '#000'; ctx.fillRect(Math.round(d.x - cx - 8), Math.round(d.y - cy - 12), 16, 2); ctx.fillStyle = '#4dffb0'; ctx.fillRect(Math.round(d.x - cx - 8), Math.round(d.y - cy - 12), Math.max(1, Math.round(16 * d.hp / d.mhp)), 2); } if (d.beamT > 0) { d.beamT -= 0.016; ctx.strokeStyle = '#4dffb0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(d.x - cx, d.y - cy); ctx.lineTo(d.x - cx + Math.cos(d.ba) * 270, d.y - cy + Math.sin(d.ba) * 270); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); } }); }
     if (it.grenade) it.grenade.sh.forEach(function (s) { if (s.t < 0) return; var u = s.t / s.dur, x = s.x0 + (s.x - s.x0) * u, y = s.y0 + (s.y - s.y0) * u - Math.sin(u * 3.1416) * 60; ctx.fillStyle = '#ff9a3c'; ctx.fillRect(Math.round(x - cx - 2), Math.round(y - cy - 2), 5, 5); ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(x - cx - 1), Math.round(y - cy - 1), 2, 2); ctx.globalAlpha = 0.25; ctx.fillStyle = '#ff9a3c'; ctx.beginPath(); ctx.arc(s.x - cx, s.y - cy, s.r, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; });
+    if (it.turret) it.turret.sh.forEach(function (t) { var X = Math.round(t.x - cx), Y = Math.round(t.y - cy); ctx.fillStyle = '#2a2f40'; ctx.fillRect(X - 5, Y - 3, 10, 7); ctx.fillStyle = '#ffb347'; ctx.fillRect(X - 4, Y - 2, 8, 2); ctx.strokeStyle = '#c0c8d8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X, Y - 3); ctx.lineTo(X + Math.cos(t.ang) * 9, Y - 3 + Math.sin(t.ang) * 9); ctx.stroke(); if (t.life < 2) { ctx.fillStyle = '#f55'; ctx.fillRect(X - 1, Y - 8, 2, 2); } });
+    if (it.dronebay) it.dronebay.dr.forEach(function (d, i) { if (d.rt > 0 || !d.init) return; A.draw(ctx, 'drone', d.x - cx, d.y - cy + Math.sin(G.t * 8 + i) * 1.5, false, d.flash > 0, 0.8, 0, d.sp > 0 ? 0.5 : 1); if (d.hp < d.mhp) { ctx.fillStyle = '#000'; ctx.fillRect(Math.round(d.x - cx - 7), Math.round(d.y - cy - 10), 14, 2); ctx.fillStyle = '#4dffb0'; ctx.fillRect(Math.round(d.x - cx - 7), Math.round(d.y - cy - 10), Math.max(1, Math.round(14 * d.hp / d.mhp)), 2); } });
+    if (it.sanctum && it.sanctum.r) { var sr = it.sanctum.r; ctx.globalAlpha = 0.12 + 0.05 * Math.sin(G.t * 4); ctx.fillStyle = '#fff08a'; ctx.beginPath(); ctx.arc(p.x - cx, p.y - cy, sr, 0, 6.283); ctx.fill(); ctx.globalAlpha = 0.5; ctx.strokeStyle = '#fff08a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x - cx, p.y - cy, sr, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
+    if (p.litanyT > 0) { ctx.strokeStyle = '#c9a3ff'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(p.x - cx, p.y - cy, 15 + Math.sin(G.t * 10) * 2, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
+
     if (it.saw && it.saw.lv >= 10) it.saw.orb.forEach(function (o) { A.draw(ctx, 'shot_saw', o.x - cx, o.y - cy, false, false, 1.3, G.t * 14); });
   };
 })();

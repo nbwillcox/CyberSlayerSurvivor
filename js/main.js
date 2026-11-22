@@ -55,7 +55,7 @@
   function tick(dt, rdt) {
     In.poll();
     if (M.state === 'combat') {
-      if (In.p.pause || In.p.blur) { M.go('pause'); }
+      if (In.p.pause || (In.p.blur && SV.d.set.autopause)) { M.go('pause'); }
       else if (fx.hitstop <= 0) {
         G.update(dt);
         if (G.over) M.finish();

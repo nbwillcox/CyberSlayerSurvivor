@@ -10,6 +10,7 @@
         var steps = l[1] === 'shake' ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1], idx = steps.indexOf(v); if (idx < 0) idx = 0; s[l[1]] = steps[(idx + 1) % steps.length]; SV.store(); AU.vol(); if (l[1] === 'music' && AU.ctx) { /* gain only */ }
       }
     });
+    if (ui.btn('setap', x0 + 3 * 112, y, 124, 20, 'AUTO-PAUSE: ' + (s.autopause ? 'ON' : 'OFF'), { c: s.autopause ? '#5cff8a' : '#7a8aa8' })) { s.autopause = !s.autopause; SV.store(); }
   }
 
   /* ---------------- title ---------------- */
@@ -22,7 +23,7 @@
     if (ui.btn('start', W / 2 - 110, 300, 220, 36, SV.d.intro ? 'START' : 'NEW GAME', { c: '#27e6ff', sc: 2 })) { CS.main.go(SV.d.intro ? 'levels' : 'class'); }
     if (ui.btn('armory', W / 2 - 110, 344, 220, 28, 'THE ARMORY SANCTUM', { c: '#ffd700' })) CS.main.go('shop');
     if (ui.btn('class', W / 2 - 110, 378, 220, 28, 'CLASS: ' + C().n, { c: C().c })) CS.main.go('class');
-    toggles(414, W / 2 - 169);
+    toggles(414, W / 2 - 230);
     ui.text('GOLD ' + U.num(SV.d.gold) + '   SECTORS CLEARED ' + SV.clearedCount() + '/10', W >> 1, 446, '#ffd700', 1, 'center');
     ui.text('WASD / ARROWS / PAD STICK / TOUCH TO MOVE.   ENTER SELECTS.   ESC PAUSES.', W >> 1, 468, '#6a7a98', 1, 'center');
     ui.text('FREE FOR NON-COMMERCIAL USE  -  CC BY-NC 4.0  -  LINK BACK REQUIRED', W >> 1, 490, '#9fb4d0', 1, 'center');
@@ -150,7 +151,7 @@
     st.forEach(function (s, i) { ui.text(s[0], 652, 78 + i * 20, '#8fb4d0', 1); ui.text('' + s[1], 928, 78 + i * 20, '#fff', 1, 'right'); });
     if (ui.btn('res', 20, 444, 200, 30, 'RESUME', { c: '#5cff8a', sc: 2 }) || In.p.pause || In.p.back) M.go('combat');
     if (ui.btn('quit', 230, 444, 200, 30, 'ABANDON RUN', { c: '#ff6a6a' })) { G.over = true; G.won = false; M.finish(); }
-    toggles(444, 450); ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
+    toggles(444, 460); ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
   };
 
   /* ---------------- result ---------------- */

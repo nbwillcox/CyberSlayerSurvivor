@@ -76,8 +76,8 @@
     ui.text(info.lv, x + w / 2, ny, info.awak ? '#ffe44d' : '#7df3ff', 1, 'center'); ny += 14;
     ui.wrap(info.desc, Math.floor((w - 16) / 6)).forEach(function (l, i) { ui.text(l, x + 8, ny + i * 9, '#b8c4dc', 1, 'left', false); }); ny += ui.wrap(info.desc, Math.floor((w - 16) / 6)).length * 9 + 5;
     if (info.bonus) { ui.text('+BONUS', x + w / 2, ny, '#ffd700', 1, 'center'); ui.wrap(info.bonus, Math.floor((w - 16) / 6)).forEach(function (l, i) { ui.text(l, x + w / 2, ny + 10 + i * 9, '#ffe44d', 1, 'center'); }); }
-    if (card.kind === 'item' && !card.isNew) ui.text(CS.ITEMS[card.id].cat.toUpperCase(), x + w / 2, y + h - 12, '#5a6a88', 1, 'center');
-    else if (card.isNew) ui.text('NEW', x + w / 2, y + h - 12, '#5cff8a', 1, 'center');
+    if (card.kind === 'item' && !card.isNew) ui.text(CS.ITEMS[card.id].cls ? 'CLASS EXCLUSIVE' : CS.ITEMS[card.id].cat.toUpperCase(), x + w / 2, y + h - 12, CS.ITEMS[card.id].cls ? '#ffd700' : '#5a6a88', 1, 'center');
+    else if (card.isNew) ui.text(CS.ITEMS[card.id].cls ? 'NEW - CLASS EXCLUSIVE' : 'NEW', x + w / 2, y + h - 12, '#5cff8a', 1, 'center');
     if (hit) { AU.sfx('click'); return true; } return false;
   };
 
