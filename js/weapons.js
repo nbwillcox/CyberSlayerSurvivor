@@ -192,10 +192,16 @@
 
   UP.drone = function (it, dt) {
     var p = G.p, lv = it.lv, nd = lv >= 10 ? 2 : 1, i, d, cap = G.cls === 'engineer' ? SV.classRank('engineer', 'capacitor') : 0;
-    while (it.dr.length < nd) it.dr.push({ x: p.x, y: p.y, a: it.dr.length * 3.14, cd: 0, burst: 0, bt: 0 });
+    while (it.dr.length < nd) it.dr.push({ x: p.x, y: p.y, a: it.dr.length * 3.14, cd: 0, burst: 0, bt: 0, hp: 1, mhp: 1, rt: 0, hurt: 0, flash: 0, spawn: 0 });
     var tg = target(250);
     for (i = 0; i < nd; i++) {
-      d = it.dr[i]; d.a += dt * (lv >= 10 ? 1.6 : 2.2); var tx = p.x + Math.cos(d.a) * (lv >= 10 ? 38 : 32), ty = p.y + Math.sin(d.a) * (lv >= 10 ? 38 : 32) - 6;
+      d = it.dr[i]; d.mhp = Math.round(30 * sc(it) * (lv >= 10 ? 1.6 : 1));
+      if (d.rt > 0) { d.rt -= dt; if (d.rt <= 0) { d.hp = d.mhp; d.x = p.x; d.y = p.y; d.spawn = 0.5; fx.v('ring', p.x, p.y, { r: 4, r2: 24, c: '#4dffb0', w: 2, life: 0.25 }); AU.sfx('spawn'); } continue; }
+      if (!d.init) { d.init = 1; d.hp = d.mhp; d.lm = d.mhp; } else if (d.mhp !== d.lm) { d.hp += d.mhp - d.lm; d.lm = d.mhp; }
+      if (d.spawn > 0) d.spawn -= dt; if (d.flash > 0) d.flash--;
+      d.hurt -= dt; if (d.hurt <= 0) { var ne = G.nearest(d.x, d.y, 9); if (ne) { d.hp -= Math.max(1, ne.dmg * 0.6); d.hurt = 0.5; d.flash = 3; } }
+      if (d.hp <= 0) { d.rt = 3.5; fx.burst(d.x, d.y, 12, '#4dffb0', 120, 0.4, 2); fx.v('flash', d.x, d.y, { r: 12, c: '#fff', life: 0.15 }); AU.sfx('smallboom'); fx.num(d.x, d.y - 10, 'DRONE DOWN', '#ff7a7a', 1); d.burst = 0; continue; }
+      d.a += dt * (lv >= 10 ? 1.6 : 2.2); var tx = p.x + Math.cos(d.a) * (lv >= 10 ? 38 : 32), ty = p.y + Math.sin(d.a) * (lv >= 10 ? 38 : 32) - 6;
       d.x += (tx - d.x) * Math.min(1, dt * 10); d.y += (ty - d.y) * Math.min(1, dt * 10);
       var dmg = 6.5 * sc(it);
       if (lv >= 10) { // twin-laser valkyrie: continuous beams
@@ -284,14 +290,15 @@
 
   UP.saw = function (it, dt) {
     var p = G.p, lv = it.lv, i; it.cd -= dt;
-    if (lv >= 10) { // orbiting blade ring
+    it.t2 = (it.t2 || 0) + dt; var phase = it.t2 % 9, ringOn = lv >= 10 && phase < 5; it.orb.length = ringOn ? it.orb.length : 0;
+    if (ringOn) { // orbiting blade ring: 5s on / 4s off
       it.t += dt * 3.2; var no = 4;
       for (i = 0; i < no; i++) { var a = it.t + i * 6.283 / no, bx = p.x + Math.cos(a) * 54, by = p.y + Math.sin(a) * 54, n = G.nearList(bx, by, 9), j; for (j = 0; j < n.length; j++) { var e = n[j]; if (e.dead || e.sawCd > 0) continue; e.sawCd = 0.25; G.hit(e, 14 * sc(it), { src: 'saw', type: 'phys', kb: 140, dx: Math.cos(a), dy: Math.sin(a) }); } it.orb[i] = { x: bx, y: by }; }
     }
     if (it.cd > 0) return; var tg = target(380); if (!tg) { it.cd = 0.15; return; }
     it.cd = cd(it, 3.2, 0.05, 1.4); var n2 = 1 + Math.floor(it.pw / 2.2) + pp(it) + (lv >= 5 ? 1 : 0); if (lv >= 10) n2 *= 2;
     var base = Math.atan2(tg.y - p.y, tg.x - p.x);
-    for (i = 0; i < n2; i++) G.shot(p.x, p.y, base + (i - (n2 - 1) / 2) * (6.283 / Math.max(3, n2)) * 0.6 + U.rr(-0.1, 0.1), 235, 14 * sc(it), { src: 'saw', saw: true, spr: 'shot_saw', spin: 14, pierce: 99, life: lv >= 10 ? 7 : 4 + 0.2 * it.pw, split: lv >= 5 ? (lv >= 8 ? 2 : 1) : 0, kb: 100, r: 9, type: 'phys' });
+    for (i = 0; i < n2; i++) G.shot(p.x, p.y, base + (i - (n2 - 1) / 2) * (6.283 / Math.max(3, n2)) * 0.6 + U.rr(-0.1, 0.1), 235, 14 * sc(it), { src: 'saw', saw: true, spr: 'shot_saw', spin: 14, pierce: 99, life: lv >= 10 ? 4.5 : Math.min(3.5, 2.6 + 0.1 * it.pw), split: lv >= 5 ? (lv >= 8 ? 2 : 1) : 0, kb: 100, r: 9, type: 'phys' });
     AU.sfx('saw');
   };
 
@@ -304,7 +311,7 @@
   /* ---------------- drawing of weapon-owned visuals ---------------- */
   WP.drawPlayerFx = function (ctx, cx, cy) {
     var p = G.p, it = p.items, A = CS.art, i, d;
-    if (it.drone) { it.drone.dr.forEach(function (d, i) { A.draw(ctx, 'drone', d.x - cx, d.y - cy + Math.sin(G.t * 8 + i) * 1.5, false, false, 1); if (d.beamT > 0) { d.beamT -= 0.016; ctx.strokeStyle = '#4dffb0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(d.x - cx, d.y - cy); ctx.lineTo(d.x - cx + Math.cos(d.ba) * 270, d.y - cy + Math.sin(d.ba) * 270); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); } }); }
+    if (it.drone) { it.drone.dr.forEach(function (d, i) { if (d.rt > 0) return; A.draw(ctx, 'drone', d.x - cx, d.y - cy + Math.sin(G.t * 8 + i) * 1.5, false, d.flash > 0, 1, 0, d.spawn > 0 ? 0.5 : 1); if (d.hp < d.mhp) { ctx.fillStyle = '#000'; ctx.fillRect(Math.round(d.x - cx - 8), Math.round(d.y - cy - 12), 16, 2); ctx.fillStyle = '#4dffb0'; ctx.fillRect(Math.round(d.x - cx - 8), Math.round(d.y - cy - 12), Math.max(1, Math.round(16 * d.hp / d.mhp)), 2); } if (d.beamT > 0) { d.beamT -= 0.016; ctx.strokeStyle = '#4dffb0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(d.x - cx, d.y - cy); ctx.lineTo(d.x - cx + Math.cos(d.ba) * 270, d.y - cy + Math.sin(d.ba) * 270); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); } }); }
     if (it.grenade) it.grenade.sh.forEach(function (s) { if (s.t < 0) return; var u = s.t / s.dur, x = s.x0 + (s.x - s.x0) * u, y = s.y0 + (s.y - s.y0) * u - Math.sin(u * 3.1416) * 60; ctx.fillStyle = '#ff9a3c'; ctx.fillRect(Math.round(x - cx - 2), Math.round(y - cy - 2), 5, 5); ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(x - cx - 1), Math.round(y - cy - 1), 2, 2); ctx.globalAlpha = 0.25; ctx.fillStyle = '#ff9a3c'; ctx.beginPath(); ctx.arc(s.x - cx, s.y - cy, s.r, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; });
     if (it.saw && it.saw.lv >= 10) it.saw.orb.forEach(function (o) { A.draw(ctx, 'shot_saw', o.x - cx, o.y - cy, false, false, 1.3, G.t * 14); });
   };

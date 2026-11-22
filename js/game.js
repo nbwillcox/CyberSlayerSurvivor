@@ -267,7 +267,7 @@
         var L = G.cam.x + 20, R = G.cam.x + W - 20, T = G.cam.y + 20, B = G.cam.y + H - 20, bounced = false;
         if (s.x < L) { s.x = L; s.vx = Math.abs(s.vx); bounced = true; } else if (s.x > R) { s.x = R; s.vx = -Math.abs(s.vx); bounced = true; }
         if (s.y < T) { s.y = T; s.vy = Math.abs(s.vy); bounced = true; } else if (s.y > B) { s.y = B; s.vy = -Math.abs(s.vy); bounced = true; }
-        if (bounced && s.split > 0 && G.sh.n < 200) { s.split--; var an = Math.atan2(s.vy, s.vx) + 0.6, sp2 = Math.hypot(s.vx, s.vy), c2 = G.shot(s.x, s.y, an, sp2, s.dmg * 0.7, { src: s.src, r: s.r, life: Math.min(2.5, s.life), saw: true, spr: 'shot_saw', spin: 14, pierce: 99, type: 'phys' }); }
+        if (bounced && s.split > 0 && G.sh.n < 200) { s.split--; var an = Math.atan2(s.vy, s.vx) + 0.6, sp2 = Math.hypot(s.vx, s.vy), c2 = G.shot(s.x, s.y, an, sp2, s.dmg * 0.7, { src: s.src, r: s.r, life: Math.min(1.5, s.life), saw: true, spr: 'shot_saw', spin: 14, pierce: 99, type: 'phys' }); }
       }
       var lst = G.nearList(s.x, s.y, s.r); n = lst.length;
       for (k = 0; k < n; k++) {
@@ -293,6 +293,8 @@
       if (b.life <= 0 || (b.x - p.x) * (b.x - p.x) + (b.y - p.y) * (b.y - p.y) > 900 * 900) { a.kill(i); continue; }
       var blocked = false;
       for (j = 0; j < G.mn.n; j++) { mm = G.mn.a[j]; if (mm.kind !== 'aegis' || mm.dead) continue; if ((mm.x - b.x) * (mm.x - b.x) + (mm.y - b.y) * (mm.y - b.y) < (mm.r + b.r + 3) * (mm.r + b.r + 3)) { blocked = true; fx.burst(b.x, b.y, 4, '#ffe44d', 90, 0.25, 2); AU.sfx('shield'); if (CS.WP.aegisReflect()) { G.shot(b.x, b.y, Math.atan2(-b.vy, -b.vx), 300, b.dmg * 2 + 10, { src: 'aegis', spr: 'shot_bolt', life: 1.2, type: 'holy' }); } break; } }
+      var dr = p.items.drone;
+      if (!blocked && dr) for (j = 0; j < dr.dr.length; j++) { var dd = dr.dr[j]; if (dd.rt > 0) continue; if ((dd.x - b.x) * (dd.x - b.x) + (dd.y - b.y) * (dd.y - b.y) < (b.r + 6) * (b.r + 6)) { dd.hp -= b.dmg; dd.flash = 3; blocked = true; fx.burst(b.x, b.y, 3, '#4dffb0', 80, 0.2, 2); break; } }
       if (blocked) { a.kill(i); continue; }
       d = (b.x - p.x) * (b.x - p.x) + (b.y - p.y) * (b.y - p.y);
       if (d < (b.r + p.r) * (b.r + p.r)) {
