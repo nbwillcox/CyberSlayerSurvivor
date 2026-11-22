@@ -42,9 +42,18 @@
     M.sel = Math.min(9, won && st < 8 ? st + 1 : st); M.go('result'); AU.music('menu');
   };
 
+  var bl, blc, ema = 0.0167, slow = 0, bloomOff = false;
+  function bloom(ctx) {
+    if (SV.d.set.bloom === false || bloomOff) return;
+    if (!bl) { bl = document.createElement('canvas'); bl.width = 240; bl.height = 135; blc = bl.getContext('2d'); }
+    if (typeof blc.filter === 'string') blc.filter = 'brightness(0.85) contrast(1.7)';
+    blc.globalCompositeOperation = 'copy'; blc.drawImage(canvas, 0, 0, 240, 135);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.4; ctx.imageSmoothingEnabled = true; ctx.drawImage(bl, 0, 0, W, H); ctx.restore(); ctx.imageSmoothingEnabled = false;
+  }
   function frame(now) {
     requestAnimationFrame(frame);
     var rdt = Math.min(0.1, (now - last) / 1000 || 0); last = now; acc += rdt;
+    if (M.state === 'combat' && rdt > 0) { ema += (rdt - ema) * 0.05; if (ema > 0.026) { if (++slow > 240) bloomOff = true; } else slow = 0; }
     var steps = 0;
     while (acc >= STEP && steps < 5) { acc -= STEP; steps++; tick(STEP, rdt); }
     if (steps === 0 && acc > 1) acc = 0;
@@ -74,7 +83,7 @@
     ui.begin(ctx, dt);
     switch (M.state) {
       case 'title': SC.title(ctx); break; case 'class': SC.class(ctx); break; case 'levels': SC.levels(ctx); break; case 'shop': SC.shop(ctx); break; case 'result': SC.result(ctx, M); break;
-      case 'combat': G.draw(ctx); ui.hud(ctx); fx.drawXp(ctx); break;
+      case 'combat': G.draw(ctx); bloom(ctx); ctx.drawImage(CS.art.vignette(), 0, 0); ui.hud(ctx); fx.drawXp(ctx); break;
       case 'settings': SC.settings(ctx, M); break; case 'draft': SC.draft(ctx, M); break; case 'chest': SC.chest(ctx, M); break; case 'pause': SC.pause(ctx, M); break;
     }
     if (M.state !== 'combat') { if (M.state !== 'pause' && M.state !== 'settings' || true) ui.hints(M.state); In.endFrame(); } else { In.p = {}; In.taps.length = 0; }

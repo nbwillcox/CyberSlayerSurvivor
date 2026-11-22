@@ -35,12 +35,12 @@
   };
 
   fx.drawWorld = function (ctx, cx, cy) { // sparks (additive-ish look via bright colours)
-    var a = fx.parts, i, p;
+    var a = fx.parts, i, p; ctx.globalCompositeOperation = 'lighter';
     for (i = 0; i < a.n; i++) { p = a.a[i]; ctx.globalAlpha = Math.min(1, p.life / p.max * 1.5); ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x - cx), Math.round(p.y - cy), p.s, p.s); }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   };
   fx.drawVfx = function (ctx, cx, cy) {
-    var a = fx.vfx, i, v, t, X, Y;
+    var a = fx.vfx, i, v, t, X, Y; ctx.globalCompositeOperation = 'lighter';
     for (i = 0; i < a.n; i++) {
       v = a.a[i]; t = 1 - v.life / v.max; X = v.x - cx; Y = v.y - cy; ctx.globalAlpha = Math.min(1, (1 - t) * 1.6);
       if (v.kind === 'ring') { ctx.strokeStyle = v.c; ctx.lineWidth = v.w * (1 - t * 0.6); ctx.beginPath(); ctx.arc(X, Y, v.r + (v.r2 - v.r) * t, 0, 6.283); ctx.stroke(); }
@@ -52,7 +52,7 @@
         ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(x2, y2); ctx.stroke();
       } else if (v.kind === 'beam') { var w = v.w * (1 - t * 0.5); ctx.fillStyle = v.c; ctx.fillRect(Math.round(X - w), Math.round(Y - v.h), Math.round(w * 2), v.h); ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(X - w / 3), Math.round(Y - v.h), Math.round(w / 1.5), v.h); }
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   };
   fx.drawNums = function (ctx, cx, cy) {
     var a = fx.nums, i, n, A = CS.art;

@@ -13,7 +13,21 @@ The game ships 100% playable with procedural pixel art and a Web Audio synth. Dr
 
 Key families: `gunner engineer priest` - `skeleton ghost hound lich golem banshee` - `drone` - `mn_<vanguard|sniper|aegis|detonator|giant>_<class>` - `mb_0..3` (mid-bosses) - `boss_0..9` (sector bosses) - `coin scrap health magnet chest` - `shot_slug shot_plasma shot_orb shot_saw shot_bolt` - `icon_<itemId>`.
 
-Sprites are drawn at a fixed in-game size and scaled with nearest-neighbour. **Author at exactly 2x the in-game size** so every source pixel maps to a whole number of screen pixels (e.g. skeleton 48 px, golem 72 px, mid-boss 128 px, sector boss 192 px, final boss 240 px - or 64/32/128 per the table printed by `--catalog`). The game keeps your image's aspect ratio. Use the optional `{ "file": ..., "scale": 1.5 }` manifest form to resize an entry.
+Generated PNGs are drawn **1:1 at their native size** (the manifest entry carries `"scale": 1`), so author them at the final in-game size - `python tools/comfy/make_sprites.py` does exactly that (max dimension: players 54 px, small enemies 36-46, golem 58, mid-bosses 96, sector bosses 128, final boss 168). Tiles are 256x256 (seamless) and `title_bg` is 960x540. Entries without `scale` fall back to the procedural sprite's draw size.
+
+## Automated pipeline (what shipped in this repo)
+
+All art/audio in `assets/` was produced with the scripts in `tools/comfy/` against a local ComfyUI (`127.0.0.1:8188`, no cloud nodes):
+
+```
+python tools/comfy/gen_art.py          # Z-Image Turbo -> assets/raw_art/*.png (magenta-key sprites, tiles, title)
+python tools/comfy/make_sprites.py     # chroma-key, box-downscale, 32-colour palette, outline -> assets/sprites/
+python tools/comfy/gen_audio.py sfx    # Stable Audio 3 Medium, 3 takes per SFX
+python tools/comfy/gen_audio.py music  # 11 tracks x 2 candidates
+python tools/comfy/master_audio.py     # pick best take, loop-cut, -14 LUFS, MP3 / WAV -> assets/audio/
+node tools/gen-manifest.js             # rebuild assets/manifest.json
+```
+Raw intermediates (`assets/raw_art`, `assets/raw_audio`) are gitignored. Python deps: `numpy scipy pillow av`.
 
 ## A. Pixel-art workflow (zero blur)
 

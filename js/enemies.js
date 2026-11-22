@@ -60,7 +60,7 @@
     var p = G.p, a = Math.random() * 6.283, e = G.spawnEnemy('golem', p.x + Math.cos(a) * 380, p.y + Math.sin(a) * 280, null); if (!e) return null;
     e.boss = true; e.mid = mid; e.name = def.n; e.spr = mid ? 'mb_' + idx : 'boss_' + G.stage; e.def = def;
     var S = G.power(), hp = mid ? def.hp * (0.5 + S / 8) * (1 + 0.3 * (G.t / 480)) * (1 + 0.2 * G.stage) : def.hp * (G.blitz ? 0.75 : 1) * (0.6 + 0.4 * (0.5 + S / 8));
-    e.mhp = e.hp = Math.round(hp); e.r = mid ? 22 : (G.stage === 9 ? 40 : 32); e.spd = mid ? 54 : 46; e.dmg = (mid ? 18 : 26) * G.dmgScale(); e.armor = (mid ? 3 : 6) + G.stage + (mid ? 0.2 : 0.12) * S; e.kbr = 0.96; e.xp = mid ? 60 + 10 * G.stage : 300; e.gold = 0; e.tag = 'demon';
+    e.mhp = e.hp = Math.round(hp); e.r = mid ? 30 : (G.stage === 9 ? 52 : 44); e.spd = mid ? 54 : 46; e.dmg = (mid ? 18 : 26) * G.dmgScale(); e.armor = (mid ? 3 : 6) + G.stage + (mid ? 0.2 : 0.12) * S; e.kbr = 0.96; e.xp = mid ? 60 + 10 * G.stage : 300; e.gold = 0; e.tag = 'demon';
     e.pats = def.pat.slice(); e.pi = 0; e.gap = 1.4; e.act = null; e.phase = 0; e.big = 1; e.elite = false;
     G.bossOn = e; if (!mid) G.stageBoss = true; return e;
   }

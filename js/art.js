@@ -172,6 +172,18 @@
   };
   A.drawIcon = function (ctx, id, x, y, sc) { var s = A.icon(id); sc = sc || 1; ctx.drawImage(s.c, 0, 0, s.fw, s.h, Math.round(x), Math.round(y), 24 * sc, 24 * sc); };
 
+  /* soft radial glow sprites (cached per colour) for additive blending */
+  var GL = {};
+  A.glow = function (col) {
+    var g = GL[col]; if (g) return g; var c = document.createElement('canvas'); c.width = c.height = 32; var x = c.getContext('2d'), rg = x.createRadialGradient(16, 16, 1, 16, 16, 16);
+    rg.addColorStop(0, col); rg.addColorStop(0.35, A.hex(col, 0.55)); rg.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = rg; x.fillRect(0, 0, 32, 32); GL[col] = c; return c;
+  };
+  var VIG = null;
+  A.vignette = function () {
+    if (VIG) return VIG; VIG = document.createElement('canvas'); VIG.width = CS.W; VIG.height = CS.H; var x = VIG.getContext('2d'), rg = x.createRadialGradient(CS.W / 2, CS.H / 2, CS.H * 0.45, CS.W / 2, CS.H / 2, CS.W * 0.62);
+    rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(0,0,10,0.55)'); x.fillStyle = rg; x.fillRect(0, 0, CS.W, CS.H); return VIG;
+  };
+
   /* ---------- draw helpers ---------- */
   function white(s) { var c = document.createElement('canvas'); c.width = s.c.width; c.height = s.c.height; var g = c.getContext('2d'); g.drawImage(s.c, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); s.white = c; return c; }
   function flipped(c) { var f = document.createElement('canvas'); f.width = c.width; f.height = c.height; var g = f.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return f; }
@@ -200,6 +212,8 @@
           var im = new Image(); im.onload = function () {
             var old = A.spr[key], cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0);
             var fw = im.width / frames, dw = old ? old.dw : fw, dh = dw * im.height / fw; if (scale) { dw = fw * scale; dh = im.height * scale; }
+            var tm = key.match(/^tile_(\d)$/); if (tm) { A.tiles[+tm[1]] = cv; res(); return; }
+            if (key === 'title_bg') { A.titleBg = cv; res(); return; }
             A.spr[key] = { c: cv, w: im.width, h: im.height, fw: im.width / frames, frames: frames, dw: dw, dh: dh, white: null, fc: null, fwhite: null, proc: false }; A.loaded++; res();
           }; im.onerror = function () { res(); }; im.src = file;
         }));

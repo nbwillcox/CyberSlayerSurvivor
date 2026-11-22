@@ -2,14 +2,17 @@
 (function () {
   var U = CS.U, A = CS.art, In = CS.In, AU = CS.audio, SV = CS.save, ui = CS.ui, W = CS.W, H = CS.H, SC = CS.screens = {};
   var C = function () { return CS.CLASSES[SV.d.cls]; };
+  function arc() { try { return window.parent !== window && window.parent.ARCADE ? window.parent : null; } catch (e) { return null; } }
+  function arcadeBtn(id, x, y) { if (arc() && ui.btn(id, x, y, 170, 22, 'BACK TO ARCADE', { c: '#ff9a3c' })) arc().ARCADE.exitGame(); }
+  function afs() { try { return window.parent !== window && window.parent.ARCADE_FS; } catch (e) { return null; } }
 
   /* ---------------- title ---------------- */
   SC.title = function (ctx) {
-    var t = ui.t; ui.backdrop(ctx, ['#07040f', '#1a1040', '#b54cff']);
+    var t = ui.t; if (A.titleBg) { ctx.drawImage(A.titleBg, 0, 0, W, H); ctx.fillStyle = 'rgba(4,2,12,.55)'; ctx.fillRect(0, 0, W, H); } else ui.backdrop(ctx, ['#07040f', '#1a1040', '#b54cff']);
     // logo
     var y = 70 + Math.sin(t * 2) * 3; ui.text('CYBER SLAYER', W >> 1, y, '#27e6ff', 7, 'center'); ui.text('CYBER SLAYER', (W >> 1) - 2, y - 2, '#b54cff', 7, 'center', false); ui.text('CYBER SLAYER', W >> 1, y, '#e8ffff', 7, 'center', false);
     ui.text('SURVIVOR', W >> 1, y + 66, '#ffd700', 5, 'center'); ui.text('BULLET-HEAVEN MINION ROGUELITE', W >> 1, y + 112, '#9fb4d0', 1, 'center');
-    ['gunner', 'engineer', 'priest'].forEach(function (c, i) { A.draw(ctx, c, W / 2 - 110 + i * 110, 250 + Math.sin(t * 3 + i) * 3, i === 2, false, 2.2); });
+    ['gunner', 'engineer', 'priest'].forEach(function (c, i) { A.draw(ctx, c, W / 2 - 110 + i * 110, 252 + Math.sin(t * 3 + i) * 3, i === 2, false, 1.6); });
     if (ui.btn('start', W / 2 - 110, 300, 220, 36, SV.d.intro ? 'START' : 'NEW GAME', { c: '#27e6ff', sc: 2 })) { CS.main.go(SV.d.intro ? 'levels' : 'class'); }
     if (ui.btn('armory', W / 2 - 110, 344, 220, 28, 'THE ARMORY SANCTUM', { c: '#ffd700' })) CS.main.go('shop');
     if (ui.btn('class', W / 2 - 110, 378, 220, 28, 'CLASS: ' + C().n, { c: C().c })) CS.main.go('class');
@@ -17,6 +20,7 @@
     ui.text('GOLD ' + U.num(SV.d.gold) + '   SECTORS CLEARED ' + SV.clearedCount() + '/10', W >> 1, 446, '#ffd700', 1, 'center');
     ui.text('WASD / ARROWS / PAD STICK / TOUCH TO MOVE.   ENTER SELECTS.   ESC PAUSES.', W >> 1, 468, '#6a7a98', 1, 'center');
     ui.text('FREE FOR NON-COMMERCIAL USE  -  CC BY-NC 4.0  -  LINK BACK REQUIRED', W >> 1, 490, '#9fb4d0', 1, 'center');
+    arcadeBtn('arc', 12, 12);
     ui.link('lk1', W / 2 - 170, 506, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.link('lk2', W / 2 + 20, 506, 150, 'GITHUB REPO', CS.LINKS.repo);
   };
 
@@ -27,7 +31,7 @@
       var c = CS.CLASSES[id], x = 40 + i * 300, y = 70, w = 280, h = 390, sel = SV.d.cls === id;
       if (ui.btn('cl' + i, x, y, w, h, '', { c: c.c })) { SV.d.cls = id; SV.d.intro = true; SV.store(); CS.main.go('levels'); }
       ui.text(c.n, x + w / 2, y + 12, c.c, 2, 'center'); ui.text(c.sub, x + w / 2, y + 32, '#9fb4d0', 1, 'center');
-      ctx.fillStyle = A.hex(c.c, 0.18); ctx.fillRect(x + 90, y + 50, 100, 100); A.draw(ctx, id, x + w / 2, y + 100 + Math.sin(ui.t * 3) * 2, false, false, 4);
+      ctx.fillStyle = A.hex(c.c, 0.18); ctx.fillRect(x + 90, y + 50, 100, 100); var cs_ = A.spr[id]; A.draw(ctx, id, x + w / 2, y + 100 + Math.sin(ui.t * 3) * 2, false, false, 96 / Math.max(cs_.dw, cs_.dh));
       var st = [['HP', c.hp], ['ARMOR', c.armor], ['SPEED', c.spd], ['CRIT', Math.round(c.crit * 100) + '%'], ['PICKUP', c.pick]];
       st.forEach(function (s, j) { ui.text(s[0], x + 20, y + 162 + j * 12, '#8fb4d0', 1); ui.text('' + s[1], x + w - 20, y + 162 + j * 12, '#fff', 1, 'right'); });
       ui.text('PRIMARY', x + 20, y + 230, '#ffd700', 1); ui.text(CS.ITEMS[c.primary].n, x + 20, y + 242, '#fff', 1);
@@ -53,7 +57,7 @@
       }
       ctx.drawImage(A.tile(n - 1), 0, 0, Math.min(256, w - 4), Math.min(256, h - 4), x + 2, y + 2, Math.min(256, w - 4), Math.min(256, h - 4));
       ctx.fillStyle = open ? 'rgba(0,0,0,.35)' : 'rgba(0,0,10,.78)'; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
-      if (open) A.draw(ctx, 'boss_' + (n - 1), x + w - 36, y + h / 2 - 4, false, false, n === 10 ? 0.6 : 0.7);
+      if (open) var bs = A.spr['boss_' + (n - 1)]; A.draw(ctx, 'boss_' + (n - 1), x + w - 44, y + h / 2 - 2, false, false, 78 / Math.max(bs.dw, bs.dh));
       ui.text(S.sub, x + 8, y + 8, S.pal[2], 1); ui.text(open ? S.n : '???', x + 8, y + 20, open ? '#fff' : '#6a7a98', 1);
       ui.text(clr ? 'CLEARED' : open ? 'READY' : n === 10 ? 'LOCKED' : 'LOCKED - 1 KEY', x + 8, y + h - 14, clr ? '#5cff8a' : open ? '#ffd700' : '#ff7a7a', 1);
     }
@@ -71,7 +75,7 @@
       ui.text('HAZARDS', px + 12, py + 88, '#ffd700', 1); var hn = { slag: 'MOLTEN SLAG', conveyor: 'CONVEYORS', storm: 'STORMS', lasers: 'LASER GRIDS', acid: 'ACID POOLS', ice: 'SLIPPERY ICE', rings: 'PLASMA RINGS' }; ui.text(S.hz.length ? S.hz.map(function (h) { return hn[h]; }).join(', ') : 'NONE - WARM UP', px + 12, py + 100, '#fff', 1, 'left', false);
       ui.text('LENGTH', px + 12, py + 122, '#ffd700', 1); ui.text(U.fmt(CS.BAL.stageSec(n - 1, d.blitz)) + (d.blitz ? ' BLITZ' : ' STANDARD') + ' + BOSS', px + 12, py + 134, '#fff', 1);
       ui.text('BEST CLEAR', px + 12, py + 156, '#ffd700', 1); ui.text(d.best[n] ? U.fmt(d.best[n]) : '--', px + 12, py + 168, '#fff', 1);
-      A.draw(ctx, 'boss_' + (n - 1), px + pw - 70, py + 110, false, false, 1);
+      var bs2 = A.spr['boss_' + (n - 1)]; A.draw(ctx, 'boss_' + (n - 1), px + pw - 90, py + 130, false, false, 150 / Math.max(bs2.dw, bs2.dh));
     } else ui.text(n === 10 ? 'DEFEAT ALL NINE SECTOR BOSSES' : 'SPEND A DECRYPTION KEY TO UNLOCK', px + 12, py + 60, '#ff9a7a', 1);
     ui.text('YOUR SLAYER', px + 12, py + ph - 70, '#ffd700', 1); ui.text(C().n, px + 12, py + ph - 58, C().c, 1);
     ui.text('GOLD KEPT ON DEFEAT: 60%', px + 12, py + ph - 40, '#7a8aa8', 1);
@@ -141,7 +145,7 @@
     st.forEach(function (s, i) { ui.text(s[0], 652, 78 + i * 20, '#8fb4d0', 1); ui.text('' + s[1], 928, 78 + i * 20, '#fff', 1, 'right'); });
     if (ui.btn('res', 20, 444, 200, 30, 'RESUME', { c: '#5cff8a', sc: 2 }) || In.p.pause || In.p.back) M.go('combat');
     if (ui.btn('quit', 230, 444, 200, 30, 'ABANDON RUN', { c: '#ff6a6a' })) { G.over = true; G.won = false; M.finish(); }
-    if (ui.btn('settings', 450, 444, 200, 30, 'SETTINGS', { c: '#7a8aa8' })) { M.setBack = 'pause'; M.go('settings'); } ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
+    if (ui.btn('settings', 450, 444, 200, 30, 'SETTINGS', { c: '#7a8aa8' })) { M.setBack = 'pause'; M.go('settings'); } arcadeBtn('arc', 778, 12); ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
   };
 
   /* ---------------- settings ---------------- */
@@ -165,15 +169,16 @@
     var d = SV.d, s = d.set, i;
     ui.backdrop(ctx, ['#070a16', '#142040', '#7a8aa8']); ui.title('SETTINGS', 12, '#27e6ff', 3);
     ['GAME & AUDIO', 'KEYBOARD', 'TOUCH & CONTROLLER'].forEach(function (n, k) { if (ui.btn('tab' + k, 60 + k * 276, 50, 268, 26, n, { c: tab === k ? '#ffd700' : '#5a6a88', tc: tab === k ? '#fff' : '#99a' })) { tab = k; pending = null; In.listen = null; } });
-    var y = 92, st = 38;
+    var y = 88, st = 34;
     if (tab === 0) {
       slider('shk', y, 'SCREEN SHAKE', s.shake, [0, 0.25, 0.5, 0.75, 1], PCT, function (v) { s.shake = v; SV.store(); }); y += st;
       toggle('dmg', y, 'DAMAGE NUMBERS', s.dmgnums !== false, function (v) { s.dmgnums = v; SV.store(); }); y += st;
       toggle('fls', y, 'SCREEN FLASHES', s.flash !== false, function (v) { s.flash = v; SV.store(); }, 'HIT FLASH, SIREN AND LOW-HP PULSES'); y += st;
+      toggle('blm', y, 'GLOW / BLOOM', s.bloom !== false, function (v) { s.bloom = v; SV.store(); }, 'TURNS ITSELF OFF ON SLOW DEVICES'); y += st;
       toggle('ap', y, 'PAUSE WHEN WINDOW LOSES FOCUS', !!s.autopause, function (v) { s.autopause = v; SV.store(); }); y += st;
       slider('mus', y, 'MUSIC VOLUME', s.music, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], PCT, function (v) { s.music = v; SV.store(); AU.vol(); }); y += st;
       slider('sfx', y, 'SOUND EFFECTS VOLUME', s.sfx, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], PCT, function (v) { s.sfx = v; SV.store(); AU.vol(); AU.sfx('coin'); }); y += st;
-      if (document.documentElement.requestFullscreen) { ui.text('FULLSCREEN', 60, y + 8, '#c9d6ff', 1); if (ui.btn('fs', 520, y, 150, 24, document.fullscreenElement ? 'EXIT' : 'ENTER', { c: '#27e6ff' })) { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(function () { }); } y += st; }
+      var AF = afs(); if (AF || document.documentElement.requestFullscreen) { var isF = AF ? AF.is() : !!document.fullscreenElement; ui.text('FULLSCREEN', 60, y + 8, '#c9d6ff', 1); if (ui.btn('fs', 520, y, 150, 24, isF ? 'EXIT' : 'ENTER', { c: '#27e6ff' })) { if (AF) { if (isF) AF.exit(); else AF.request(); } else if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(function () { }); } y += st; }
       ui.text('ALL CHANGES SAVE AUTOMATICALLY', 60, y + 4, '#5a6a88', 1, 'left', false);
     } else if (tab === 1) {
       ui.text('CLICK A SLOT, THEN PRESS THE NEW KEY.  ESC CANCELS.  ARROWS, ENTER AND ESC ALWAYS WORK IN MENUS.', 60, 84, '#7a8aa8', 1, 'left', false);
@@ -209,7 +214,7 @@
     var r = M.res; ui.backdrop(ctx, r.won ? ['#041208', '#0f4a28', '#ffd700'] : ['#140406', '#4a1020', '#ff4a5a']);
     ui.title(r.won ? (r.stage === 9 ? 'OMEGA CITADEL CLEARED!' : 'SECTOR CLEARED!') : 'SLAYER DOWN', 50, r.won ? '#ffd700' : '#ff4a5a', 4);
     ui.text(CS.STAGES[r.stage].n, W >> 1, 100, '#fff', 2, 'center');
-    A.draw(ctx, SV.d.cls, W >> 1, 170, false, false, 3);
+    var rs = A.spr[SV.d.cls]; A.draw(ctx, SV.d.cls, W >> 1, 165, false, false, 90 / Math.max(rs.dw, rs.dh));
     var lines = [['TIME SURVIVED', U.fmt(r.time)], ['LEVEL REACHED', r.level], ['ENEMIES SLAIN', r.kills], ['BOSSES DOWN', r.bosses], ['GOLD COLLECTED', U.num(r.gold)], [r.won ? 'VICTORY BONUS' : 'GOLD LOST (40%)', r.won ? '+' + r.bonus : '-' + r.lost], ['GOLD BANKED', '+' + r.banked]];
     lines.forEach(function (l, i) { ui.text(l[0], 300, 230 + i * 20, '#9fb4d0', 1); ui.text('' + l[1], 660, 230 + i * 20, i === 6 ? '#ffd700' : '#fff', 1, 'right'); });
     if (r.keyGain) ui.text('+1 SECTOR DECRYPTION KEY', W >> 1, 380, '#ffe44d', 2, 'center'); if (r.unlockMsg) ui.text(r.unlockMsg, W >> 1, 404, '#5cff8a', 1, 'center');

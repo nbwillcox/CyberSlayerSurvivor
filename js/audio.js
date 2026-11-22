@@ -68,11 +68,12 @@
     telegraph: function () { tone('sine', 300, 300, 0.1, 0.18); }
   };
   var LIM = { hit: 0.04, kill: 0.04, plasma: 0.05, coin: 0.035, scrap: 0.045, whoosh: 0.1, saw: 0.12, zap: 0.06, smallboom: 0.06, crit: 0.05, bolt: 0.08, slug: 0.08, boom: 0.08 };
+  var SMIX = { hit: 0.45, kill: 0.5, plasma: 0.4, coin: 0.6, scrap: 0.5, saw: 0.4, zap: 0.6, smallboom: 0.65, move: 0.5, click: 0.6, whoosh: 0.5, slug: 0.75, bolt: 0.7, spawn: 0.6, telegraph: 0.6, crit: 0.65 };
   A.sfx = function (name, vol, rate) {
     if (!A.ctx) return; var c = A.ctx, now = c.currentTime;
     if (A.last[name] && now - A.last[name] < (LIM[name] || 0.02)) return; A.last[name] = now;
     var b = A.buf[name];
-    if (b) { var s = c.createBufferSource(), g = c.createGain(); s.buffer = b; s.playbackRate.value = (rate || 1) * (0.96 + Math.random() * 0.08); g.gain.value = vol || 1; s.connect(g); g.connect(A.sg); s.start(); return; }
+    if (b) { var s = c.createBufferSource(), g = c.createGain(); s.buffer = b; s.playbackRate.value = (rate || 1) * (0.96 + Math.random() * 0.08); g.gain.value = (vol || 1) * (SMIX[name] || 0.8); s.connect(g); g.connect(A.sg); s.start(); return; }
     if (S[name]) S[name]();
   };
 
@@ -104,7 +105,7 @@
   A.loadSample = function (key, url) {
     return fetch(url).then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(function (ab) {
       if (!A.ctx) A.init(); if (!A.ctx) return;
-      return A.ctx.decodeAudioData(ab).then(function (b) { A.buf[key] = b; });
+      return A.ctx.decodeAudioData(ab).then(function (b) { A.buf[key] = b; if (key.indexOf('music_') === 0 && 'music_' + A.musStage === key) { var st = A.musStage; A.stopMusic(); A.music(st); } });
     }).catch(function () { });
   };
 })();

@@ -453,8 +453,14 @@
     }
     ctx.globalAlpha = 1;
   }
+  var GCOL = { shot_slug: '#ffb347', shot_plasma: '#4dffb0', shot_bolt: '#ffe44d', shot_saw: '#27e6ff', shot_orb: '#ff4fd8' };
   function drawShots(ctx, cx, cy) {
-    var a = G.sh, i, s;
+    var a = G.sh, i, s, gl;
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.55;
+    for (i = 0; i < a.n; i++) { s = a.a[i]; gl = A.glow(GCOL[s.spr] || '#ffffff'); var gs = s.saw ? 22 : 16 * s.big; ctx.drawImage(gl, Math.round(s.x - cx - gs / 2), Math.round(s.y - cy - gs / 2), gs, gs); }
+    for (i = 0; i < G.eb.n; i++) { s = G.eb.a[i]; gl = A.glow(s.col || '#ff2a9a'); ctx.drawImage(gl, Math.round(s.x - cx - 11), Math.round(s.y - cy - 11), 22, 22); }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
     for (i = 0; i < a.n; i++) { s = a.a[i]; if (s.saw) A.draw(ctx, 'shot_saw', s.x - cx, s.y - cy, false, false, s.big, s.rot); else A.draw(ctx, s.spr, s.x - cx, s.y - cy, false, false, s.big, Math.atan2(s.vy, s.vx)); }
     a = G.eb; for (i = 0; i < a.n; i++) { s = a.a[i]; A.draw(ctx, s.spr, s.x - cx, s.y - cy, false, false, 1, 0); }
   }
@@ -475,7 +481,7 @@
     CS.MN.draw(ctx, cx, cy);
     // player
     X = p.x - cx; Y = p.y - cy;
-    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(Math.round(X), Math.round(Y + 10), 9, 3, 0, 0, 6.283); ctx.fill();
+    var psp = A.spr[G.cls], foot = psp ? psp.dh / 2 - 3 : 10; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(Math.round(X), Math.round(Y + foot), 10, 3, 0, 0, 6.283); ctx.fill();
     if (p.shield > 0 || p.holy > 0) { ctx.globalAlpha = 0.25 + 0.15 * Math.sin(G.t * 6); ctx.strokeStyle = p.holy > 0 && p.shield <= 0 ? '#ffe44d' : '#48a8ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X, Y, 18, 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
     if (p.aegisT > 0) { ctx.globalAlpha = 0.5; ctx.strokeStyle = '#ffd35a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(X, Y, 20 + Math.sin(G.t * 20), 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1; }
     if (!(p.inv > 0 && Math.floor(G.t * 20) % 2 && p.aegisT <= 0)) A.draw(ctx, G.cls, X, Y - Math.abs(Math.sin(p.bob)) * 2, p.face < 0, p.flash > 0);

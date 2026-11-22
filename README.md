@@ -22,7 +22,7 @@ Move: `WASD` / arrows / pad left stick / touch drag. Menus: arrows + `Enter`, mo
 
 ## Art & audio
 
-The game generates all sprites and sound procedurally. To use your own ComfyUI art/audio see **[COMFYUI_GUIDE.md](COMFYUI_GUIDE.md)** (workflow, exact prompts, file naming). Drop files in `assets/sprites` / `assets/audio` and run `node tools/gen-manifest.js`.
+Sprites, tiles, title art, sound effects and music in `assets/` were generated locally with ComfyUI (Z-Image Turbo + Stable Audio 3 Medium); the game still falls back to procedural art/synth for anything missing. To regenerate or replace assets see **[COMFYUI_GUIDE.md](COMFYUI_GUIDE.md)** (workflow, exact prompts, file naming). Drop files in `assets/sprites` / `assets/audio` and run `node tools/gen-manifest.js`.
 
 ## Project layout
 
