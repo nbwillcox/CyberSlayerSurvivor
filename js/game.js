@@ -40,7 +40,9 @@
   G.nearest = function (x, y, r, skip) { return G.grid.nearest(x, y, r, skip); };
   G.near = function (x, y, r, max) { return G.grid.near(x, y, r, G.tmp, max || 255); };
   G.nearList = function (x, y, r) { var n = G.grid.near(x, y, r, G.tmp, 255), o = new Array(n), i; for (i = 0; i < n; i++) o[i] = G.tmp[i]; return o; };
-  G.hpMul = function () { var m = G.t / 60; return (1 + 0.14 * m + 0.012 * m * m) * (1 + 0.1 * G.stage); };
+  /* player power S: sum of item power (offense full, defense half). Start of a run is ~2. */
+  G.power = function () { var p = G.p, s = 0, id; for (id in p.items) s += p.items[id].pw * (CS.ITEMS[id].cat === 'defense' ? 0.5 : 1); return s; };
+  G.hpMul = function () { var m = G.t / 60; return (1 + 0.14 * m + 0.012 * m * m) * (1 + 0.1 * G.stage) * (1 + 0.02 * Math.max(0, G.power() - 2)); };
   G.dmgScale = function () { return (1 + 0.05 * G.t / 60) * (1 + 0.07 * G.stage); };
 
   /* ---------------- enemies ---------------- */
@@ -238,7 +240,7 @@
   function director(dt) {
     var t = G.t, p = G.p, m = t / 60;
     if (G.stageBoss && G.bossOn && !G.bossOn.dead) { /* during the sector boss fight keep light pressure */ }
-    var rate = (2.6 + 1.5 * m + 0.14 * m * m) * (1 + 0.04 * G.stage) * (G.stageBoss ? 0.45 : 1);
+    var rate = (2.6 + 1.5 * m + 0.14 * m * m) * (1 + 0.04 * G.stage) * (1 + 0.008 * Math.max(0, G.power() - 2)) * (G.stageBoss ? 0.45 : 1);
     var cap = CS.BAL.maxEnemies * Math.min(1, 0.35 + t / 300); if (G.stageBoss) cap *= 0.5;
     G.spawnAcc += rate * dt; var w = weights();
     while (G.spawnAcc >= 1) { G.spawnAcc--; if (G.en.n >= cap) break; var ty = TYPES[U.weighted(w)]; G.spawnRing(ty, 1, 540, { elite: t > (G.stage >= 8 ? 60 : 150) && Math.random() < Math.min(0.05, (t - 60) / 4000) * (G.stage >= 8 ? 3 : 1) }); }
