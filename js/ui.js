@@ -4,7 +4,7 @@
   var ui = CS.ui = { btns: [], prev: [], focus: '', ctx: null, lastMx: -1, lastMy: -1, t: 0 };
 
   ui.begin = function (ctx, dt) {
-    ui.ctx = ctx; ui.t += dt; ui.prev = ui.btns; ui.btns = []; ui.act = null;
+    ui.ctx = ctx; ui.t += dt; ui.prev = ui.btns; ui.btns = []; ui.act = null; ui.hitX = null;
     var pv = ui.prev, i, b, p = In.p, dir = p.up ? 'up' : p.down ? 'down' : p.left ? 'left' : p.right ? 'right' : null;
     if (In.mx !== ui.lastMx || In.my !== ui.lastMy) { ui.lastMx = In.mx; ui.lastMy = In.my; if (In.lastDev === 'mouse') for (i = 0; i < pv.length; i++) { b = pv[i]; if (!b.dis && In.mx >= b.x && In.mx < b.x + b.w && In.my >= b.y && In.my < b.y + b.h) { ui.focus = b.id; break; } } }
     var cur = null; for (i = 0; i < pv.length; i++) if (pv[i].id === ui.focus) cur = pv[i];
@@ -38,7 +38,8 @@
   ui.btn = function (id, x, y, w, h, label, o) {
     o = o || {}; var c = ui.ctx, foc = ui.focus === id, dis = !!o.dis, col = o.c || '#27e6ff', hit = false, i;
     ui.btns.push({ id: id, x: x, y: y, w: w, h: h, dis: dis });
-    for (i = 0; i < ui.taps.length; i++) { var t = ui.taps[i]; if (t.x >= x && t.x < x + w && t.y >= y && t.y < y + h) { hit = true; ui.focus = id; } }
+    var sl = In.lastDev === 'touch' ? 5 : 0;
+    for (i = 0; i < ui.taps.length; i++) { var t = ui.taps[i]; if (t.x >= x - sl && t.x < x + w + sl && t.y >= y - sl && t.y < y + h + sl) { hit = true; ui.focus = id; ui.hitX = t.x; } }
     if (foc && ui.confirm) hit = true;
     var fill = dis ? '#10131f' : foc ? A.hex(col, 0.32) : '#0a0e1c';
     ui.panel(x, y, w, h, dis ? '#3a4058' : foc ? '#ffffff' : A.hex(col, 0.75), fill, 0.95);
@@ -82,6 +83,15 @@
     if (hit) { AU.sfx('click'); return true; } return false;
   };
 
+  /* controller / keyboard prompts along the bottom edge */
+  ui.hints = function (kind) {
+    if (In.lastDev === 'touch') return; var pad = In.lastDev === 'pad', pb = In.padb || In.DEF_PAD, kb = In.keyb || In.DEF_KEYS, s;
+    function pn(a) { return In.PAD_NAMES[pb[a]] || '?'; }
+    if (pad) s = pn('confirm') + ' SELECT   ' + pn('back') + ' BACK' + (kind === 'draft' ? '   ' + pn('reroll') + ' REROLL   LB/RB PICK 1/3' : '');
+    else s = In.keyName(kb.confirm[0]) + ' SELECT   ' + In.keyName(kb.back[0] || 'Escape') + ' BACK' + (kind === 'draft' ? '   ' + In.keyName(kb.reroll[0]) + ' REROLL   1/2/3 PICK' : '');
+    ui.text(s, W >> 1, H - 11, '#5a6a88', 1, 'center', false);
+  };
+
   /* ---------- combat HUD ---------- */
   ui.hud = function (ctx) {
     var G = CS.G, p = G.p, i, id, it, X;
@@ -106,13 +116,13 @@
     ui.text('WEAPONS & MINIONS', 8, H - 72, '#5a6a88', 1); ui.text('DEFENSE', 8, H - 44, '#5a6a88', 1, 'left', false);
     // banner
     if (G.banner) { var bn = G.banner, a = Math.min(1, bn.t * 2); ctx.globalAlpha = a; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 100, W, 56); ui.text(bn.text, W >> 1, 108, bn.c, 3, 'center'); if (bn.sub) ui.text(bn.sub, W >> 1, 138, '#fff', 1, 'center'); ctx.globalAlpha = 1; }
-    if (G.sirenT > 0) { ctx.fillStyle = 'rgba(255,0,0,' + (0.12 * (0.5 + 0.5 * Math.sin(G.t * 12))) + ')'; ctx.fillRect(0, 0, W, H); }
+    if (G.sirenT > 0 && CS.save.d.set.flash !== false) { ctx.fillStyle = 'rgba(255,0,0,' + (0.12 * (0.5 + 0.5 * Math.sin(G.t * 12))) + ')'; ctx.fillRect(0, 0, W, H); }
     if (p.magnetT > 0) ui.text('MAGNET ' + Math.ceil(p.magnetT), W >> 1, 74, '#ff5a7a', 1, 'center');
     if (p.staticT > 0) ui.text('STATIC INTERFERENCE', W >> 1, 84, '#d48bff', 1, 'center');
     // pause icon for touch
-    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(W - 24, H - 28, 5, 16); ctx.fillRect(W - 15, H - 28, 5, 16);
+    if (In.touch || In.lastDev === 'touch') { ctx.fillStyle = 'rgba(10,14,28,.6)'; ctx.fillRect(W - 50, 58, 40, 40); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1; ctx.strokeRect(W - 49.5, 58.5, 39, 39); ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(W - 39, 68, 6, 20); ctx.fillRect(W - 27, 68, 6, 20); if (CS.save.d.set.stick === 'fixed' && !In.joy.on) { ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(In.fixedBase.x, In.fixedBase.y, 45, 0, 6.283); ctx.stroke(); } }
     var j = In.joy; if (j.on) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(j.ox, j.oy, 45, 0, 6.283); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.4)'; var l = Math.min(45, Math.hypot(j.x, j.y)), an = Math.atan2(j.y, j.x); ctx.beginPath(); ctx.arc(j.ox + Math.cos(an) * l, j.oy + Math.sin(an) * l, 14, 0, 6.283); ctx.fill(); }
-    if (CS.fx.flash > 0) { ctx.globalAlpha = Math.min(0.5, CS.fx.flash * 3); ctx.fillStyle = CS.fx.flashC; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
-    if (p.hp < p.maxHp * 0.25) { ctx.fillStyle = 'rgba(255,0,30,' + (0.1 + 0.07 * Math.sin(G.t * 8)) + ')'; ctx.fillRect(0, 0, W, 6); ctx.fillRect(0, H - 6, W, 6); ctx.fillRect(0, 0, 6, H); ctx.fillRect(W - 6, 0, 6, H); }
+    if (CS.fx.flash > 0 && CS.save.d.set.flash !== false) { ctx.globalAlpha = Math.min(0.5, CS.fx.flash * 3); ctx.fillStyle = CS.fx.flashC; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+    if (p.hp < p.maxHp * 0.25 && CS.save.d.set.flash !== false) { ctx.fillStyle = 'rgba(255,0,30,' + (0.1 + 0.07 * Math.sin(G.t * 8)) + ')'; ctx.fillRect(0, 0, W, 6); ctx.fillRect(0, H - 6, W, 6); ctx.fillRect(0, 0, 6, H); ctx.fillRect(W - 6, 0, 6, H); }
   };
 })();

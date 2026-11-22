@@ -3,16 +3,6 @@
   var U = CS.U, A = CS.art, In = CS.In, AU = CS.audio, SV = CS.save, ui = CS.ui, W = CS.W, H = CS.H, SC = CS.screens = {};
   var C = function () { return CS.CLASSES[SV.d.cls]; };
 
-  function toggles(y, x0) {
-    var s = SV.d.set, labels = [['MUSIC', 'music'], ['SFX', 'sfx'], ['SHAKE', 'shake']], x = x0;
-    labels.forEach(function (l, i) {
-      var v = s[l[1]]; if (ui.btn('set' + i, x + i * 112, y, 106, 20, l[0] + ' ' + Math.round(v * (l[1] === 'shake' ? 100 : 100)) + '%', { c: '#7a8aa8' })) {
-        var steps = l[1] === 'shake' ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1], idx = steps.indexOf(v); if (idx < 0) idx = 0; s[l[1]] = steps[(idx + 1) % steps.length]; SV.store(); AU.vol(); if (l[1] === 'music' && AU.ctx) { /* gain only */ }
-      }
-    });
-    if (ui.btn('setap', x0 + 3 * 112, y, 124, 20, 'AUTO-PAUSE: ' + (s.autopause ? 'ON' : 'OFF'), { c: s.autopause ? '#5cff8a' : '#7a8aa8' })) { s.autopause = !s.autopause; SV.store(); }
-  }
-
   /* ---------------- title ---------------- */
   SC.title = function (ctx) {
     var t = ui.t; ui.backdrop(ctx, ['#07040f', '#1a1040', '#b54cff']);
@@ -23,7 +13,7 @@
     if (ui.btn('start', W / 2 - 110, 300, 220, 36, SV.d.intro ? 'START' : 'NEW GAME', { c: '#27e6ff', sc: 2 })) { CS.main.go(SV.d.intro ? 'levels' : 'class'); }
     if (ui.btn('armory', W / 2 - 110, 344, 220, 28, 'THE ARMORY SANCTUM', { c: '#ffd700' })) CS.main.go('shop');
     if (ui.btn('class', W / 2 - 110, 378, 220, 28, 'CLASS: ' + C().n, { c: C().c })) CS.main.go('class');
-    toggles(414, W / 2 - 230);
+    if (ui.btn('settings', W / 2 - 110, 414, 220, 24, 'SETTINGS & CONTROLS', { c: '#7a8aa8' })) { CS.main.setBack = 'title'; CS.main.go('settings'); }
     ui.text('GOLD ' + U.num(SV.d.gold) + '   SECTORS CLEARED ' + SV.clearedCount() + '/10', W >> 1, 446, '#ffd700', 1, 'center');
     ui.text('WASD / ARROWS / PAD STICK / TOUCH TO MOVE.   ENTER SELECTS.   ESC PAUSES.', W >> 1, 468, '#6a7a98', 1, 'center');
     ui.text('FREE FOR NON-COMMERCIAL USE  -  CC BY-NC 4.0  -  LINK BACK REQUIRED', W >> 1, 490, '#9fb4d0', 1, 'center');
@@ -151,7 +141,67 @@
     st.forEach(function (s, i) { ui.text(s[0], 652, 78 + i * 20, '#8fb4d0', 1); ui.text('' + s[1], 928, 78 + i * 20, '#fff', 1, 'right'); });
     if (ui.btn('res', 20, 444, 200, 30, 'RESUME', { c: '#5cff8a', sc: 2 }) || In.p.pause || In.p.back) M.go('combat');
     if (ui.btn('quit', 230, 444, 200, 30, 'ABANDON RUN', { c: '#ff6a6a' })) { G.over = true; G.won = false; M.finish(); }
-    toggles(444, 460); ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
+    if (ui.btn('settings', 450, 444, 200, 30, 'SETTINGS', { c: '#7a8aa8' })) { M.setBack = 'pause'; M.go('settings'); } ui.link('lk', 790, 478, 150, 'NICTOOLS.DEV', CS.LINKS.site); ui.text('FREE FOR NON-COMMERCIAL USE - LINK BACK TO NICTOOLS.DEV OR THE GITHUB REPO', 20, 490, '#6a7a98', 1, 'left', false);
+  };
+
+  /* ---------------- settings ---------------- */
+  var tab = 0, pending = null;
+  function slider(id, y, label, val, steps, fmt, set) {
+    ui.text(label, 60, y + 8, '#c9d6ff', 1);
+    var x0 = 520, idx = 0, i, best = 9; for (i = 0; i < steps.length; i++) if (Math.abs(steps[i] - val) < best) { best = Math.abs(steps[i] - val); idx = i; }
+    if (ui.btn(id + 'm', x0, y, 30, 24, '-', { c: '#27e6ff', sc: 2 })) set(steps[Math.max(0, idx - 1)]);
+    var bx = x0 + 36, bw = 220, ctx = ui.ctx;
+    if (ui.btn(id + 'b', bx, y, bw, 24, '', { c: '#27e6ff' })) { if (ui.hitX !== null) { var f = U.clamp((ui.hitX - bx) / bw, 0, 1); set(steps[Math.round(f * (steps.length - 1))]); } }
+    ctx.fillStyle = '#27e6ff'; ctx.fillRect(bx + 3, y + 8, Math.round((bw - 6) * idx / (steps.length - 1)), 8); ctx.fillStyle = '#1a2038'; ctx.fillRect(bx + 3 + Math.round((bw - 6) * idx / (steps.length - 1)), y + 8, bw - 6 - Math.round((bw - 6) * idx / (steps.length - 1)), 8);
+    if (ui.btn(id + 'p', bx + bw + 6, y, 30, 24, '+', { c: '#27e6ff', sc: 2 })) set(steps[Math.min(steps.length - 1, idx + 1)]);
+    ui.text(fmt(steps[idx]), bx + bw + 46, y + 8, '#fff', 1);
+  }
+  function toggle(id, y, label, on, set, sub) {
+    ui.text(label, 60, y + 8, '#c9d6ff', 1); if (sub) ui.text(sub, 60, y + 19, '#5a6a88', 1, 'left', false);
+    if (ui.btn(id, 520, y, 150, 24, on ? 'ON' : 'OFF', { c: on ? '#5cff8a' : '#ff7a7a', tc: on ? '#5cff8a' : '#ff9a9a' })) set(!on);
+  }
+  var PCT = function (v) { return Math.round(v * 100) + '%'; };
+  SC.settings = function (ctx, M) {
+    var d = SV.d, s = d.set, i;
+    ui.backdrop(ctx, ['#070a16', '#142040', '#7a8aa8']); ui.title('SETTINGS', 12, '#27e6ff', 3);
+    ['GAME & AUDIO', 'KEYBOARD', 'TOUCH & CONTROLLER'].forEach(function (n, k) { if (ui.btn('tab' + k, 60 + k * 276, 50, 268, 26, n, { c: tab === k ? '#ffd700' : '#5a6a88', tc: tab === k ? '#fff' : '#99a' })) { tab = k; pending = null; In.listen = null; } });
+    var y = 92, st = 38;
+    if (tab === 0) {
+      slider('shk', y, 'SCREEN SHAKE', s.shake, [0, 0.25, 0.5, 0.75, 1], PCT, function (v) { s.shake = v; SV.store(); }); y += st;
+      toggle('dmg', y, 'DAMAGE NUMBERS', s.dmgnums !== false, function (v) { s.dmgnums = v; SV.store(); }); y += st;
+      toggle('fls', y, 'SCREEN FLASHES', s.flash !== false, function (v) { s.flash = v; SV.store(); }, 'HIT FLASH, SIREN AND LOW-HP PULSES'); y += st;
+      toggle('ap', y, 'PAUSE WHEN WINDOW LOSES FOCUS', !!s.autopause, function (v) { s.autopause = v; SV.store(); }); y += st;
+      slider('mus', y, 'MUSIC VOLUME', s.music, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], PCT, function (v) { s.music = v; SV.store(); AU.vol(); }); y += st;
+      slider('sfx', y, 'SOUND EFFECTS VOLUME', s.sfx, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], PCT, function (v) { s.sfx = v; SV.store(); AU.vol(); AU.sfx('coin'); }); y += st;
+      if (document.documentElement.requestFullscreen) { ui.text('FULLSCREEN', 60, y + 8, '#c9d6ff', 1); if (ui.btn('fs', 520, y, 150, 24, document.fullscreenElement ? 'EXIT' : 'ENTER', { c: '#27e6ff' })) { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(function () { }); } y += st; }
+      ui.text('ALL CHANGES SAVE AUTOMATICALLY', 60, y + 4, '#5a6a88', 1, 'left', false);
+    } else if (tab === 1) {
+      ui.text('CLICK A SLOT, THEN PRESS THE NEW KEY.  ESC CANCELS.  ARROWS, ENTER AND ESC ALWAYS WORK IN MENUS.', 60, 84, '#7a8aa8', 1, 'left', false);
+      In.ACTIONS.forEach(function (a, k) {
+        var yy = 100 + k * 33; ui.text(a[1], 60, yy + 8, '#c9d6ff', 1);
+        for (var sl = 0; sl < 2; sl++) {
+          (function (sl) { var lis = pending && pending.kind === 'key' && pending.a === a[0] && pending.sl === sl;
+            if (ui.btn('k' + k + '_' + sl, 400 + sl * 200, yy, 190, 26, lis ? 'PRESS A KEY...' : In.keyName(In.keyb[a[0]][sl]), { c: lis ? '#ffd700' : '#27e6ff' })) { pending = { kind: 'key', a: a[0], sl: sl }; In.listen = { kind: 'key', cb: function (code) { if (code !== 'Escape' || a[0] === 'pause' || a[0] === 'back') In.setKey(a[0], sl, code); else { /* Escape cancels */ } pending = null; } }; } })(sl);
+        }
+      });
+      if (ui.btn('rk', 60, 372, 200, 26, 'RESET TO DEFAULTS', { c: '#ff9a3c' })) { In.resetKeys(); AU.sfx('buy'); }
+      ui.text('DRAFT CARDS CAN ALSO BE PICKED WITH 1 / 2 / 3', 60, 410, '#5a6a88', 1, 'left', false);
+    } else {
+      ui.text('TOUCH', 60, 84, '#ffd700', 1);
+      ui.text('STICK STYLE', 60, 108, '#c9d6ff', 1); if (ui.btn('stk', 520, 100, 200, 24, s.stick === 'fixed' ? 'FIXED (LEFT SIDE)' : 'FLOATING', { c: '#27e6ff' })) { s.stick = s.stick === 'fixed' ? 'float' : 'fixed'; SV.store(); }
+      toggle('hap', 138, 'VIBRATION / RUMBLE', s.haptics !== false, function (v) { s.haptics = v; SV.store(); if (v) In.rumble(120, 0.7); });
+      ui.text('CONTROLLER', 60, 176, '#ffd700', 1);
+      slider('dz', 192, 'STICK DEADZONE', s.deadzone, [0.1, 0.15, 0.2, 0.25, 0.3, 0.4], PCT, function (v) { s.deadzone = v; SV.store(); });
+      ui.text(In.pad ? 'CONTROLLER: ' + String(In.pad.id).slice(0, 40).toUpperCase() : 'NO CONTROLLER DETECTED - PRESS ANY BUTTON', 60, 228, In.pad ? '#5cff8a' : '#ff9a7a', 1, 'left', false);
+      [['confirm', 'CONFIRM / SELECT'], ['back', 'BACK'], ['pause', 'PAUSE / MENU'], ['reroll', 'REROLL CARDS']].forEach(function (a, k) {
+        var yy = 246 + k * 32, lis = pending && pending.kind === 'pad' && pending.a === a[0]; ui.text(a[1], 60, yy + 8, '#c9d6ff', 1);
+        if (ui.btn('p' + k, 520, yy, 200, 26, lis ? 'PRESS A BUTTON...' : (In.PAD_NAMES[In.padb[a[0]]] || 'NONE'), { c: lis ? '#ffd700' : '#27e6ff' })) { pending = { kind: 'pad', a: a[0] }; In.listen = { kind: 'pad', cb: function (idx) { In.setPad(a[0], idx); pending = null; } }; }
+      });
+      if (ui.btn('rp', 60, 378, 200, 26, 'RESET CONTROLLER', { c: '#ff9a3c' })) { In.resetPad(); AU.sfx('buy'); }
+      ui.text('D-PAD / LEFT STICK MOVES AND NAVIGATES MENUS.  LB / RB PICK DRAFT CARDS 1 / 3.', 60, 416, '#5a6a88', 1, 'left', false);
+    }
+    if (ui.btn('back', 60, 486, 200, 30, 'BACK', { c: '#5cff8a', sc: 2 }) || (In.p.back && !In.listen && !pending)) { In.listen = null; pending = null; M.go(M.setBack || 'title'); }
+    ui.link('lk', 780, 492, 150, 'NICTOOLS.DEV', CS.LINKS.site);
   };
 
   /* ---------------- result ---------------- */

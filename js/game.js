@@ -186,7 +186,7 @@
       if (dmg <= 0) { p.inv = 0.3; return; }
     }
     var flat = p.armor * 0.5, mit = p.armor / (p.armor + 80); dmg = Math.max(dmg * 0.15, (dmg - flat)) * (1 - mit); dmg = Math.max(1, Math.round(dmg));
-    p.hp -= dmg; p.inv = 0.45; p.flash = 6; p.hurtT = 0.3; G.stats.taken += dmg; fx.num(p.x, p.y - 14, '-' + dmg, '#ff4a5a', 1); AU.sfx('hurt'); fx.shake(0.35, p.x - sx, p.y - sy); fx.flash = 0.12; fx.flashC = '#ff2040';
+    p.hp -= dmg; p.inv = 0.45; p.flash = 6; p.hurtT = 0.3; G.stats.taken += dmg; fx.num(p.x, p.y - 14, '-' + dmg, '#ff4a5a', 1); AU.sfx('hurt'); fx.shake(0.35, p.x - sx, p.y - sy); fx.flash = 0.12; fx.flashC = '#ff2040'; In.rumble(90, 0.6);
     if (it.plating && it.plating.lv >= 5) CS.WP.reactive();
     CS.WP.onHurt();
     if (p.hp <= 0) CS.WP.tryDeath();

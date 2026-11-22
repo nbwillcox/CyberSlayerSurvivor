@@ -13,7 +13,7 @@
   }
 
   M.go = function (st) {
-    if (st === 'title' || st === 'levels' || st === 'class' || st === 'shop') { AU.music('menu'); In.joyEnabled = false; }
+    if (st === 'title' || st === 'levels' || st === 'class' || st === 'shop' || st === 'settings') { AU.music('menu'); In.joyEnabled = false; }
     if (st === 'combat') In.joyEnabled = true; else In.joyEnabled = false;
     M.state = st; ui.focus = ''; In.p = {}; In.taps.length = 0;
   };
@@ -52,17 +52,19 @@
     if (fx.hitstop > 0) fx.hitstop -= rdt * 1000;
   }
   var ticked = false;
+  function portrait() { return window.matchMedia && window.matchMedia('(orientation: portrait) and (pointer: coarse)').matches; }
   function tick(dt, rdt) {
     In.poll();
     if (M.state === 'combat') {
-      if (In.p.pause || (In.p.blur && SV.d.set.autopause)) { M.go('pause'); }
+      In.noJoy = { x: W - 56, y: 50, w: 56, h: 56 };
+      if (In.p.pause || (In.p.blur && SV.d.set.autopause) || portrait()) { M.go('pause'); }
       else if (fx.hitstop <= 0) {
         G.update(dt);
         if (G.over) M.finish();
         else if (G.pendingLv > 0) M.openDraft();
         else if (G.chest) { M.state = 'chest'; ui.focus = ''; In.joyEnabled = false; In.joy.on = false; }
       }
-      if (In.taps.length && M.state === 'combat') { for (var i = 0; i < In.taps.length; i++) { var t = In.taps[i]; if (t.x > W - 40 && t.y > H - 40) M.go('pause'); } }
+      if (In.taps.length && M.state === 'combat') { for (var i = 0; i < In.taps.length; i++) { var t = In.taps[i]; if (t.x > W - 56 && t.y > 50 && t.y < 106) M.go('pause'); } }
     }
     ticked = true;
   }
@@ -73,14 +75,14 @@
     switch (M.state) {
       case 'title': SC.title(ctx); break; case 'class': SC.class(ctx); break; case 'levels': SC.levels(ctx); break; case 'shop': SC.shop(ctx); break; case 'result': SC.result(ctx, M); break;
       case 'combat': G.draw(ctx); ui.hud(ctx); fx.drawXp(ctx); break;
-      case 'draft': SC.draft(ctx, M); break; case 'chest': SC.chest(ctx, M); break; case 'pause': SC.pause(ctx, M); break;
+      case 'settings': SC.settings(ctx, M); break; case 'draft': SC.draft(ctx, M); break; case 'chest': SC.chest(ctx, M); break; case 'pause': SC.pause(ctx, M); break;
     }
-    if (M.state !== 'combat') In.endFrame(); else { In.p = {}; In.taps.length = 0; }
+    if (M.state !== 'combat') { if (M.state !== 'pause' && M.state !== 'settings' || true) ui.hints(M.state); In.endFrame(); } else { In.p = {}; In.taps.length = 0; }
   }
 
   function boot() {
     canvas = document.getElementById('game'); canvas.width = W; canvas.height = H; ctx = canvas.getContext('2d', { alpha: false }); ctx.imageSmoothingEnabled = false;
-    In.attach(canvas); SV.load(); CS.art.init(); G.init(); resize(); window.addEventListener('resize', resize);
+    In.attach(canvas); SV.load(); In.loadBindings(); CS.art.init(); G.init(); resize(); window.addEventListener('resize', resize);
     var unlock = function () { AU.init(); }; ['pointerdown', 'keydown'].forEach(function (e) { window.addEventListener(e, unlock); });
     if (q.cls && CS.CLASSES[q.cls]) SV.d.cls = q.cls;
     CS.art.load();

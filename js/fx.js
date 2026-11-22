@@ -11,7 +11,7 @@
 
   fx.spark = function (x, y, vx, vy, life, c, s, g) { var p = fx.parts.spawn(); if (!p) return; p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.life = p.max = life; p.c = c; p.s = s || 2; p.g = g || 0; };
   fx.burst = function (x, y, n, c, spd, life, s) { for (var i = 0; i < n; i++) { var a = Math.random() * 6.283, v = spd * (0.3 + Math.random() * 0.7); fx.spark(x, y, Math.cos(a) * v, Math.sin(a) * v, life * (0.5 + Math.random() * 0.5), c, s); } };
-  fx.num = function (x, y, text, c, sc) { if (fx.nums.n > 70 && !(sc > 1)) return; var n = fx.nums.spawn(); if (!n) return; n.x = x + (Math.random() * 8 - 4); n.y = y - 8; n.vy = -34 - Math.random() * 14; n.life = n.max = sc > 1 ? 0.8 : 0.6; n.t = '' + text; n.c = c; n.sc = sc || 1; };
+  fx.num = function (x, y, text, c, sc) { if (CS.save.d.set.dmgnums === false && c !== '#ff4a5a') return; if (fx.nums.n > 70 && !(sc > 1)) return; var n = fx.nums.spawn(); if (!n) return; n.x = x + (Math.random() * 8 - 4); n.y = y - 8; n.vy = -34 - Math.random() * 14; n.life = n.max = sc > 1 ? 0.8 : 0.6; n.t = '' + text; n.c = c; n.sc = sc || 1; };
   fx.xp = function (wx, wy) { // XP arc: credited instantly, this is only the flying visual
     var G = CS.G; if (fx.xps.n > 90) return; var p = fx.xps.spawn(); if (!p) return;
     p.sx = wx - G.cam.x; p.sy = wy - G.cam.y; p.t = 0; p.d = 0.45 + Math.random() * 0.15; p.cx = p.sx + (Math.random() * 80 - 40); p.cy = p.sy - 40 - Math.random() * 40;

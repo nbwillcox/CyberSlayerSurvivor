@@ -4,12 +4,12 @@
   var S = CS.save = { d: null };
   function def() {
     return { gold: 0, keys: 0, cleared: {}, unlocked: { 1: true }, shop: { shared: {}, gunner: {}, engineer: {}, priest: {} }, cls: 'gunner', blitz: false,
-      best: {}, set: { music: 0.5, sfx: 0.8, shake: 1, autopause: false }, runs: 0, kills: 0, intro: false };
+      best: {}, set: { music: 0.5, sfx: 0.8, shake: 1, autopause: false, dmgnums: true, flash: true, haptics: true, stick: 'float', deadzone: 0.2, keys: {}, pad: {} }, runs: 0, kills: 0, intro: false };
   }
   S.load = function () {
     var d = def();
     try { var r = JSON.parse(localStorage.getItem(KEY)); if (r) { for (var k in r) d[k] = r[k]; for (var s in def().shop) if (!d.shop[s]) d.shop[s] = {}; } } catch (e) { }
-    if (d.set.autopause === undefined) d.set.autopause = false; S.d = d; return d;
+    var ds = def().set; for (var q in ds) if (d.set[q] === undefined) d.set[q] = ds[q]; S.d = d; return d;
   };
   S.store = function () { try { localStorage.setItem(KEY, JSON.stringify(S.d)); } catch (e) { } };
   S.rank = function (cls, id) { var t = S.d.shop.shared[id]; if (t !== undefined) return t; return (S.d.shop[cls] && S.d.shop[cls][id]) || 0; };
