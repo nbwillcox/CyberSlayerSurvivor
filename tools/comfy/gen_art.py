@@ -109,6 +109,25 @@ I = {
 }
 
 
+FXT = ("High quality game VFX texture asset: {s}. Glowing, vibrant, bright, centered in the frame, on a pure solid black background, "
+       "additive blending ready, no text, no border, no ground, no characters.")
+F = {
+    'fx_fireball': 'a fiery explosion fireball burst, orange and yellow flames with a white-hot core, radiating outward',
+    'fx_flame': 'a single tall flame tongue, bright orange and gold with a white core',
+    'fx_holyflame': 'a holy golden-white flame column with sparks rising',
+    'fx_lightning': 'a vertical jagged branching lightning bolt, electric blue and white',
+    'fx_ring': 'a glowing energy shockwave ring seen from above, a thin bright circle with a soft glow',
+    'fx_circle': 'a glowing golden magic circle with runes and sigils, seen from directly above',
+    'fx_burst': 'a bright starburst lens flare with cross rays and a hot center',
+    'fx_swirl': 'a glowing energy vortex spiral, purple and cyan, seen from directly above',
+    'fx_slash': 'a bright curved slash arc streak, white and cyan',
+    'fx_orb': 'a glowing plasma energy orb with a soft halo, cyan and white',
+    'fx_beam': 'a vertical column beam of light, bright white core with a colored glow, full height of the frame',
+    'fx_cloud': 'a swirling toxic green nanobot particle cloud with glowing specks',
+    'fx_spark': 'a burst of scattered bright sparks and embers',
+}
+
+
 def graph(prompt, w, h, seed, prefix):
     return {
         '1': {'class_type': 'UNETLoader', 'inputs': {'unet_name': 'z_image_turbo_bf16.safetensors', 'weight_dtype': 'default'}},
@@ -138,6 +157,8 @@ def jobs():
         yield k, SPRITE.format(s=s), 1024, 1024
     for k, s in T.items():
         yield k, TILE.format(s=s), 768, 768
+    for k, s in F.items():
+        yield k, FXT.format(s=s), 512, 512
     for k, s in I.items():
         yield k, ICON.format(s=s), 640, 640
     yield 'title_bg', TITLE, 1344, 768

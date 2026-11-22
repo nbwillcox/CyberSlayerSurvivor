@@ -9,6 +9,7 @@ A free pixel-art **bullet-heaven + minion-summoner roguelite** with a Mega Man-s
 * **3 classes** - Gunner (heavy ballistics + trooper squad), Engineer (assault drone + swarm drones), Holy Priest (Holy Cyber Bolt + hard-light seraphs). Each fires its primary at the nearest enemy once per second and has its own minion roster and a 4-upgrade Armory tree.
 * **19 upgradeable systems, all Lv 1-10** - 3 primary weapons, 6 spells/heavy weapons, 5 minion squads (incl. Minion Fusion), 5 defense systems. Lv 5 = awakening mutation, Lv 10 = apex transformation.
 * **5 rarity tiers** (Basic 1.0x, Enhanced 1.35x, Superior 1.75x, Epic 2.25x, Legendary 3.0x + a bonus modifier). Mid-boss chests guarantee Blue/Purple/Gold.
+* **AAA-style spell VFX:** additive glow, branching lightning, textured fireballs, shockwaves, beams and trails (ComfyUI `fx_*` textures with procedural fallbacks).
 * **Heavy & fast:** instant XP (no gems), magnetic loot vacuum, hit-flash, hit-stop, trauma screen shake, knockback, pooled entities and a spatial hash for 500+ enemies at 60 FPS.
 * **6 enemy types, 4 mid-bosses (every 90 s), 10 sector bosses**, 10 stages with distinct palettes and hazards (slag, conveyors, storms, laser grids, acid, ice, plasma rings).
 * **Mega Man-style progression:** clear Sector 01 to open the 3x3 Neural Grid. Every first clear grants a Decryption Key - spend keys to unlock stages 2-9 in any order. Sector 10 (Omega Citadel) opens after 1-9.
@@ -32,7 +33,7 @@ js/config.js     balance tables: classes, rarity, enemies, 10 stages, 19 items, 
 js/util.js       pools, spatial hash       js/save.js   localStorage progress
 js/input.js      kb/mouse/touch/gamepad    js/audio.js  Web Audio synth + BGM + sample override
 js/art.js        procedural sprites, bitmap font, tiles, PNG override loader
-js/fx.js         particles, damage numbers, XP arcs, shake, hit-stop
+js/fx.js, vfx.js  particles, damage numbers, XP arcs, shake, hit-stop
 js/game.js       combat world, damage model, loot, hazards, spawn director, render
 js/weapons.js    items / rarity / Lv1-10 behaviours   js/minions.js  minion AI + fusion
 js/enemies.js    enemy AI + boss pattern engine       js/ui.js, screens.js  HUD & menus
